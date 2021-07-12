@@ -357,6 +357,9 @@ class Compaction {
   // is successful.
   void ReleaseInputs();
 
+  bool IsSplitCompaction() const;
+
+
  private:
   friend class Version;
   friend class VersionSet;
@@ -386,6 +389,8 @@ class Compaction {
   // higher level than the ones involved in this compaction (i.e. for
   // all L >= level_ + 2).
   size_t level_ptrs_[config::kNumLevels];
+
+  bool is_split_;
 };
 
 }  // namespace leveldb

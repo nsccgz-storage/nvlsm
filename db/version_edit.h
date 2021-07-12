@@ -24,6 +24,10 @@ struct FileMetaData {
   uint64_t file_size;    // File size in bytes
   InternalKey smallest;  // Smallest internal key served by table
   InternalKey largest;   // Largest internal key served by table
+
+  // for nvm recover
+  uint64_t raw_data_size;
+  uint64_t meta_size;
 };
 
 class VersionEdit {

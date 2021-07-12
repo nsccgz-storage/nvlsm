@@ -74,6 +74,7 @@ class DBImpl : public DB {
  private:
   friend class DB;
   struct CompactionState;
+  struct CompactionStateNVM;
   struct Writer;
 
   // Information for a manual compaction
@@ -123,11 +124,16 @@ class DBImpl : public DB {
   // Errors are recorded in bg_error_.
   void CompactMemTable() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
+  void CompactMemtableToNVM() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
   Status RecoverLogFile(uint64_t log_number, bool last_log, bool* save_manifest,
                         VersionEdit* edit, SequenceNumber* max_sequence)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status WriteLevel0Table(MemTable* mem, VersionEdit* edit, Version* base)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  Status WriteLevel0TableNVM(MemTable* mem, VersionEdit* edit, Version* base)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status MakeRoomForWrite(bool force /* compact even if there is room? */)
@@ -145,6 +151,10 @@ class DBImpl : public DB {
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   Status DoCompactionWork(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  Status DoSplitWork(CompactionStateNVM* compact) 
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
 
   Status OpenCompactionOutputFile(CompactionState* compact);
   Status FinishCompactionOutputFile(CompactionState* compact, Iterator* input);

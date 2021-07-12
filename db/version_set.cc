@@ -1258,6 +1258,52 @@ Compaction* VersionSet::PickCompaction() {
   // the compactions triggered by seeks.
   const bool size_compaction = (current_->compaction_score_ >= 1);
   const bool seek_compaction = (current_->file_to_compact_ != nullptr);
+  const bool split_compaction = (current_->max_tabe_size >= options_->max_nvm_table_size);
+  
+  // if all table size exceeds limit and the number of tables in the level reach 
+  // the limit, then we will do size_compaction.
+
+
+  // FileMetaData* first_f = nullptr;
+  // FileMetaData* compact_pointer_f = nullptr;
+  // if(split_compaction) {
+  //   int num_over_size = 0;
+  //   level = current_->compaction_level_;
+  //   // there maybe multiple table that exceeds table size.
+  //   // which one will we pick
+  //   for(size_t i=0; i < current_->files_[level].size(); i++) {
+
+  //     FileMetaData* f = current_->files_[level][i];
+      
+  //     if(f->raw_data_size > TableSizeLimit) {
+  //       num_over_size++;
+  //       if(first_f == nullptr) {
+  //         first_f = f;
+  //       }
+  //       if(compact_pointer_[level].empty() || icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
+  //         if(compact_pointer_f == nullptr) {
+  //           compact_pointer_f = f;
+  //         }
+  //         // c->inputs_[0].push_back(f);
+  //         // break;
+  //       }
+  //     } 
+  //   }
+
+  //   // nonsense, if it is required that all tables exceeds limits 
+  //   // before doing size compaciton, then one small size table
+  //   // will keep size compaction happening, which means there may be too many tables
+  //   // in the same level.  
+  //   // So what do we do?
+  //   // We still put size compaction as first priority.
+  //   // and then put split compaction as second priority.
+  //   if(num_over_size >= TableLeveLimit) {
+  //     split_compaction = false;
+  //   }
+
+  // }
+  
+
   if (size_compaction) {
     level = current_->compaction_level_;
     assert(level >= 0);
@@ -1276,6 +1322,37 @@ Compaction* VersionSet::PickCompaction() {
     if (c->inputs_[0].empty()) {
       // Wrap-around to the beginning of the key space
       c->inputs_[0].push_back(current_->files_[level][0]);
+    }
+  } else if(split_compaction) {
+    level = current_->compaction_level_;
+    assert(level >= 0);
+    assert(level + 1 < config::kNumLevels);
+    c = new Compaction(options_, level);
+    c->is_split_ = true;
+
+    FileMetaData* first_f = nullptr;
+
+    for(size_t i=0; i < current_->files_[level].size(); i++) {
+
+      FileMetaData* f = current_->files_[level][i];
+      
+      if(f->raw_data_size > TableSizeLimit) {
+        if(first_f == nullptr) {
+          first_f = f;
+        }
+        if(compact_pointer_[level].empty() || icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
+          // if(compact_pointer_f == nullptr) {
+          //   compact_pointer_f = f;
+          // }
+          c->inputs_[0].push_back(f);
+          break;
+        }
+      } 
+    }
+
+    if (c->inputs_[0].empty()) {
+      assert(first_f != nullptr);
+      c->inputs_[0].push_back(first_f);
     }
   } else if (seek_compaction) {
     level = current_->file_to_compact_level_;
@@ -1299,7 +1376,9 @@ Compaction* VersionSet::PickCompaction() {
     assert(!c->inputs_[0].empty());
   }
 
-  SetupOtherInputs(c);
+  if(!size_compaction) {
+    SetupOtherInputs(c);
+  }
 
   return c;
 }
@@ -1485,7 +1564,8 @@ Compaction::Compaction(const Options* options, int level)
       input_version_(nullptr),
       grandparent_index_(0),
       seen_key_(false),
-      overlapped_bytes_(0) {
+      overlapped_bytes_(0),
+      is_split_(false) {
   for (int i = 0; i < config::kNumLevels; i++) {
     level_ptrs_[i] = 0;
   }
@@ -1505,6 +1585,10 @@ bool Compaction::IsTrivialMove() const {
   return (num_input_files(0) == 1 && num_input_files(1) == 0 &&
           TotalFileSize(grandparents_) <=
               MaxGrandParentOverlapBytes(vset->options_));
+}
+
+bool Compaction::IsSplitCompaction() const {
+  return is_split_;
 }
 
 void Compaction::AddInputDeletions(VersionEdit* edit) {
