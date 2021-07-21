@@ -95,6 +95,11 @@ class LEVELDB_EXPORT Env {
   virtual Status NewWritableFile(const std::string& fname,
                                  WritableFile** result) = 0;
 
+
+  virtual Status NewFixedSizeWritableFile(const std::string& fname,
+                                          WritableFile** result,
+                                          int size) = 0;
+
   // Create an object that either appends to an existing file, or
   // writes to a new file (if the file does not exist to begin with).
   // On success, stores a pointer to the new file in *result and

@@ -169,6 +169,9 @@ Iterator* Table::BlockReader(void* arg, const ReadOptions& options,
       char cache_key_buffer[16];
       EncodeFixed64(cache_key_buffer, table->rep_->cache_id);
       EncodeFixed64(cache_key_buffer + 8, handle.offset());
+      // key is composed with cache_id + handle offset.
+      // each table got a cache id. and to uniquly mark a block
+      // we need to append block offset to the cache_id.
       Slice key(cache_key_buffer, sizeof(cache_key_buffer));
       cache_handle = block_cache->Lookup(key);
       if (cache_handle != nullptr) {
@@ -184,6 +187,8 @@ Iterator* Table::BlockReader(void* arg, const ReadOptions& options,
         }
       }
     } else {
+      // if no options.block cache, then we will delete the 
+      // block after the iterator is done traversing.
       s = ReadBlock(table->rep_->file, options, handle, &contents);
       if (s.ok()) {
         block = new Block(contents);

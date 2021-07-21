@@ -96,6 +96,12 @@ Status ReadBlock(RandomAccessFile* file, const ReadOptions& options,
 
   switch (data[n]) {
     case kNoCompression:
+    // the data addr might be different from the preallocate buf addr
+    // since the random access file interface implementation might be different
+    // if random access file is implemented by mmap, then the data pointer addr
+    // is mmap_base + offset, and we will not use extra allocated buf to store
+    // data. so in this case we don't need to cache  this data block
+    // because it is already cached by the os. 
       if (data != buf) {
         // File implementation gave us pointer to some other data.
         // Use it directly under the assumption that it will be live

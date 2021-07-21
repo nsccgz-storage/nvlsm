@@ -434,6 +434,12 @@ class WindowsEnv : public Env {
     return WindowsError(filename, ::GetLastError());
   }
 
+  Status NewFixedSizeWritableFile(const std::string& filename,
+                         WritableFile** result, int size) override {
+
+    return Status::OK();
+}
+
   Status NewWritableFile(const std::string& filename,
                          WritableFile** result) override {
     DWORD desired_access = GENERIC_WRITE;

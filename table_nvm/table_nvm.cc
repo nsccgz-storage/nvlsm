@@ -6,12 +6,28 @@
 #include <libpmemobj++/transaction.hpp>
 #include <libpmemobj++/utils.hpp>
 
+#include "leveldb/env.h"
 #include "table_nvm.h"
 
 
 using namespace pmem::obj;
 
 namespace leveldb {
+
+struct TableNVM::Rep{
+    ~Rep() {
+        // delete 
+        delete meta;
+    }
+
+    Options options;
+    Status status;
+    RandomAccessFile* file;
+    uint64_t cache_id;
+
+    // when open 
+    NVMTableMeta* meta;
+};
 
 class TableNVMIterator: public Iterator {
 public:

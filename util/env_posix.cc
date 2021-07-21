@@ -27,6 +27,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <libpmem.h>
+
 #include "leveldb/env.h"
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
@@ -202,6 +204,10 @@ class PosixRandomAccessFile final : public RandomAccessFile {
   const std::string filename_;
 };
 
+// class PosixPmemMapReadableFile final : public RandomAccessFile {
+//   PosixPmemMapReadableFile(std::string filename, char * mmap_base, )
+// };
+
 // Implements random read access in a file using mmap().
 //
 // Instances of this class are thread-safe, as required by the RandomAccessFile
@@ -244,6 +250,41 @@ class PosixMmapReadableFile final : public RandomAccessFile {
   const size_t length_;
   Limiter* const mmap_limiter_;
   const std::string filename_;
+};
+
+class PosixPmemWritableFile final: public WritableFile {
+public:
+  PosixPmemWritableFile(void *raw, int size, int is_pmem): raw_(raw), size_(size),
+                                                          is_pmem_(is_pmem),
+                                                          cur_size_(0) {
+  }
+
+  Status Append(const Slice& data) override {
+    if(data.size() + cur_size_ > size_) {
+      return Status::IOError("append data size exceed limit");
+    }
+
+    pmem_memcpy_persist(raw_+cur_size_, data.data(), data.size());
+  }
+
+  // maybe just do nothing .
+  Status Close() override { 
+    return Status::OK();
+    // return Sync();
+  }
+
+  Status Flush() override { return Status::OK();}
+
+  Status Sync() override {
+    pmem_persist(raw_, size_);
+    return Status::OK();
+  }
+
+private:
+int cur_size_;
+  int size_;
+  void *raw_;
+  int is_pmem_;
 };
 
 class PosixWritableFile final : public WritableFile {
@@ -509,6 +550,11 @@ class PosixEnv : public Env {
     return Status::OK();
   }
 
+  // Status NewPmemRandomAccessFile(const std::string& filename,
+  //                                RandomAccessFile** result) override {
+
+  // }
+
   Status NewRandomAccessFile(const std::string& filename,
                              RandomAccessFile** result) override {
     *result = nullptr;
@@ -518,6 +564,8 @@ class PosixEnv : public Env {
     }
 
     if (!mmap_limiter_.Acquire()) {
+      printf("not open as mmap file\n");
+      // return Status::NotSupported("not")
       *result = new PosixRandomAccessFile(filename, fd, &fd_limiter_);
       return Status::OK();
     }
@@ -525,9 +573,30 @@ class PosixEnv : public Env {
     uint64_t file_size;
     Status status = GetFileSize(filename, &file_size);
     if (status.ok()) {
+      // int is_pmem;
+      // size_t mapped_len;
+      // void* mmap_base = pmem_map_file(filename.c_str(), file_size, PMEM_FILE_CREATE, 0666, &mapped_len, &is_pmem);
+      // if(mmap_base != NULL) {
+      //   if(is_pmem) {
+      //     printf("underlying storage is pmem\n");
+
+      //   } else {
+      //     printf("underlying storage is not pmem\n");
+      //   }
+      //   *result =  new PosixMmapReadableFile(filename, reinterpret_cast<char*>(mmap_base), file_size, &mmap_limiter_);
+      // } else {
+      //   status = PosixError(filename, errno);
+      // }
       void* mmap_base =
           ::mmap(/*addr=*/nullptr, file_size, PROT_READ, MAP_SHARED, fd, 0);
+
       if (mmap_base != MAP_FAILED) {
+        // int is_pmem;
+        if(pmem_is_pmem(mmap_base, file_size)) {
+          printf("underlying storage is pmem\n");
+        } else {
+          printf("underlying storage is not pmem\n");
+        }
         *result = new PosixMmapReadableFile(filename,
                                             reinterpret_cast<char*>(mmap_base),
                                             file_size, &mmap_limiter_);
@@ -540,6 +609,28 @@ class PosixEnv : public Env {
       mmap_limiter_.Release();
     }
     return status;
+  }
+
+  Status NewFixedSizeWritableFile(const std::string& filename,
+                                  WritableFile** result, int size) override {
+    void *raw_;
+    size_t mapped_len;
+    int is_pmem;
+    if((raw_ = pmem_map_file(filename.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len, &is_pmem)) == nullptr) {
+      return Status::IOError("pmem map file failed");
+
+    }
+
+    if(mapped_len != size) {
+      return Status::IOError("map file length != expected");
+    }
+
+    if(!is_pmem) {
+      printf("underlying storage is not pmem\n");
+    }
+
+    *result = new PosixPmemWritableFile(raw_, size, is_pmem);
+    return Status::OK();
   }
 
   Status NewWritableFile(const std::string& filename,

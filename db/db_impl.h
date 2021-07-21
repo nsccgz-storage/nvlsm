@@ -161,6 +161,13 @@ class DBImpl : public DB {
   Status InstallCompactionResults(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
+  Status InstallCompactionResultsNVM(CompactionStateNVM *compac)
+    EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  Status NewSplitCompactionOutput(CompactionStateNVM *compact);
+
+  Status NewLevelCompactionOutput(CompactionStateNVM *compact);
+
   const Comparator* user_comparator() const {
     return internal_comparator_.user_comparator();
   }

@@ -841,7 +841,12 @@ void DBImpl::BackgroundCompaction() {
     //CompactionState* compact = new CompactionState(c);
     CompactionStateNVM* compact = new CompactionStateNVM(c);
 
-    status = DoCompactionWork(compact);
+    if(compact->compaction->IsSplitCompaction()) {
+      status = DoSplitWork(compact);
+    } else {
+      status = DoCompactionWork(compact);
+    }
+    // status = DoCompactionWork(compact);
     if (!status.ok()) {
       RecordBackgroundError(status);
     }
@@ -891,6 +896,33 @@ void DBImpl::CleanupCompaction(CompactionState* compact) {
   delete compact;
 }
 
+Status DBImpl::NewSplitCompactionOutput(CompactionStateNVM *compact) {
+  assert(compact != nullptr);
+  assert(compact->builder_nvm == nullptr);
+  uint64_t file_number;
+
+  {
+    mutex_.Lock();
+    file_number = versions_->NewFileNumber();
+    pending_outputs_.insert(file_number);
+    CompactionStateNVM::Output out;
+    out.number = file_number;
+    out.smallest.Clear();
+    out.largest.Clear();
+    compact->outputs.push_back(out);
+    mutex_.Unlock();
+  }
+
+  std::string fname = TableFileName(dbname_, file_number);
+  compact->builder_nvm = new TableBuilderNVMSplit(options_, fname);
+  return Status::OK();
+}
+
+Status DBImpl::NewLevelCompactionOutput(CompactionStateNVM *compact) {
+
+}
+
+
 Status DBImpl::OpenCompactionOutputFile(CompactionState* compact) {
   assert(compact != nullptr);
   assert(compact->builder == nullptr);
@@ -915,6 +947,8 @@ Status DBImpl::OpenCompactionOutputFile(CompactionState* compact) {
   }
   return s;
 }
+
+Status DBImpl::FinishSplitCompaction
 
 Status DBImpl::FinishCompactionOutputFile(CompactionState* compact,
                                           Iterator* input) {
@@ -983,6 +1017,26 @@ Status DBImpl::InstallCompactionResults(CompactionState* compact) {
   return versions_->LogAndApply(compact->compaction->edit(), &mutex_);
 }
 
+Status DBImpl::InstallCompactionResultsNVM(CompactionStateNVM *compact) {
+  mutex_.AssertHeld();
+  Log(options_.info_log, "split Compact num file:%d@lelvel:%d ==> num file:%d",
+    compact->compaction->num_input_files(0), compact->compaction->level(),
+    compact->outputs.size());
+
+  // this will add all the input file to the deleted list 
+  compact->compaction->AddInputDeletions(compact->compaction->edit());
+
+  const int level = compact->compaction->level();
+  for(size_t i=0; i < compact->outputs.size(); i++) {
+    const CompactionStateNVM::Output& out = compact->outputs[i];
+    compact->compaction->edit()->AddFile(level, out.number, out.file_size, out.smallest, out.largest);
+
+
+  }
+
+  return versions_->LogAndApply(compact->compaction->edit(), &mutex_);
+}
+
 Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
   const uint64_t start_micros = env_->NowMicros();
   int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
@@ -1004,7 +1058,114 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
   Iterator* input = versions_->MakeInputIterator(compact->compaction);
   mutex_.Unlock();
 
-  
+  input->SeekToFirst();
+  Status status;
+  ParsedInternalKey ikey;
+  std::string current_user_key;
+  bool has_current_user_key = false;
+  SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
+
+  while (input->Valid() && !shutting_down_.load(std::memory_order_acquire)) {
+    if (has_imm_.load(std::memory_order_relaxed)) {
+      const uint64_t imm_start = env_->NowMicros();
+      mutex_.Lock();
+      if (imm_ != nullptr) {
+        CompactMemTable();
+        // Wake up MakeRoomForWrite() if necessary.
+        background_work_finished_signal_.SignalAll();
+      }
+      mutex_.Unlock();
+      imm_micros += (env_->NowMicros() - imm_start);
+    }
+
+    Slice key = input->key();
+    bool drop = false;
+    if(!ParsedInternalKey(key, &ikey)) {
+      current_user_key.clear();
+      has_current_user_key = false;
+      last_sequence_for_key = kMaxSequenceNumber;
+    } else {
+      if(!has_current_user_key || user_comparator()->Compare(ikey.user_key, Slice(current_user_key)) != 0) {
+        current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());
+        has_current_user_key = true;
+        last_sequence_for_key = kMaxSequenceNumber;
+      }
+
+      if(last_sequence_for_key <= compact->smallest_snapshot) {
+        drop = true;
+      } 
+
+      last_sequence_for_key = ikey.sequence;
+    }
+
+    if(!drop) {
+      if(compact->builder_nvm == nullptr) {
+        status = OpenCompactionOutputFile(compact);
+        if(!status.ok()){
+          break;
+        }
+      }
+
+      if(compact->builder_nvm->NumEntries() == 0) {
+        compact->current_output()->smallest.DecodeFrom(key);
+      }
+
+      compact->current_output()->largest.DecodeFrom(key);
+      compact->builder_nvm->Add(key, input->value());
+
+      // TODO: specify the first table size threshold
+      if(compact->builder_nvm->FileSize() >= 
+         compact->compaction->MaxOutputFileSize()) {
+        status = FinishCompactionOutputFile(compact, input);
+        if(!status.ok()) {
+          break;
+        }
+      }
+    }
+
+    input->Next();
+
+    if(status.ok() && shutting_down_.load(std::memory_order_acquire)) {
+      status = Status::IOError("Deleting DB during compaction");
+    }
+
+    if(status.ok() && compact->builder_nvm != nullptr) {
+      status = FinishCompactionOutputFile(compact, input);
+    }
+
+    if(status.ok()) {
+      status = input->status();
+    }
+
+    delete input;
+    input = nullptr;
+
+    CompactionStats stats;
+    stats.micros = env_->NowMicros() - start_micros - imm_micros;
+    for (int which = 0; which < 2; which++) {
+      for (int i = 0; i < compact->compaction->num_input_files(which); i++) {
+        stats.bytes_read += compact->compaction->input(which, i)->file_size;
+      }
+    }
+    for (size_t i = 0; i < compact->outputs.size(); i++) {
+      stats.bytes_written += compact->outputs[i].file_size;
+    }
+
+    mutex_.Lock();
+    stats_[compact->compaction->level() + 1].Add(stats);
+
+    if (status.ok()) {
+      status = InstallCompactionResults(compact);
+    }
+    if (!status.ok()) {
+      RecordBackgroundError(status);
+    }
+    VersionSet::LevelSummaryStorage tmp;
+    Log(options_.info_log, "compacted to: %s", versions_->LevelSummary(&tmp));
+    return status;
+
+
+  }
 
 }
 

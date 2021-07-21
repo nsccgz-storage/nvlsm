@@ -1258,6 +1258,10 @@ Compaction* VersionSet::PickCompaction() {
   // the compactions triggered by seeks.
   const bool size_compaction = (current_->compaction_score_ >= 1);
   const bool seek_compaction = (current_->file_to_compact_ != nullptr);
+  // how about we alway pick the table with max_table_size
+  // for split compaction. this make sense.
+  // we could traverse the tabe metadata here to find the 
+  // table with max filesize or we could sotre it after each version changed.
   const bool split_compaction = (current_->max_tabe_size >= options_->max_nvm_table_size);
   
   // if all table size exceeds limit and the number of tables in the level reach 
@@ -1324,36 +1328,51 @@ Compaction* VersionSet::PickCompaction() {
       c->inputs_[0].push_back(current_->files_[level][0]);
     }
   } else if(split_compaction) {
+    // we can pick multiple tables for split compaciton.
+    // this seems ok 
+    // but we can't pick too many tables at the same time.
+    // for size compaction, usualy we pick 11 tables for one compaction.
+    // for split compaction,we could probably pick 5 or 6 tables,
+    // since the number of new tables after split compaction will 
+    // be twice of the original number.
+
+    
+    // we are definitely need a split score in case there are too many tables in the upper level 
+    // that exceed tabe limit compared to lower level.
+    // and we still prefer size compaction.
     level = current_->compaction_level_;
     assert(level >= 0);
     assert(level + 1 < config::kNumLevels);
     c = new Compaction(options_, level);
     c->is_split_ = true;
 
-    FileMetaData* first_f = nullptr;
+    FileMetaData* max_f = current_->files_[level][0];
 
     for(size_t i=0; i < current_->files_[level].size(); i++) {
 
       FileMetaData* f = current_->files_[level][i];
-      
-      if(f->raw_data_size > TableSizeLimit) {
-        if(first_f == nullptr) {
-          first_f = f;
-        }
-        if(compact_pointer_[level].empty() || icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
-          // if(compact_pointer_f == nullptr) {
-          //   compact_pointer_f = f;
-          // }
-          c->inputs_[0].push_back(f);
-          break;
-        }
-      } 
+      if(f->file_size > max_f->file_size) {
+        max_f = f;
+      }
+      // if(f->raw_data_size > TableSizeLimit) {
+      //   if(first_f == nullptr) {
+      //     first_f = f;
+      //   }
+      //   if(compact_pointer_[level].empty() || icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
+      //     // if(compact_pointer_f == nullptr) {
+      //     //   compact_pointer_f = f;
+      //     // }
+      //     c->inputs_[0].push_back(f);
+      //     break;
+      //   }
+      // } 
     }
+    c->inputs_[0].push_back(max_f);
 
-    if (c->inputs_[0].empty()) {
-      assert(first_f != nullptr);
-      c->inputs_[0].push_back(first_f);
-    }
+    // if (c->inputs_[0].empty()) {
+    //   assert(first_f != nullptr);
+    //   c->inputs_[0].push_back(first_f);
+    // }
   } else if (seek_compaction) {
     level = current_->file_to_compact_level_;
     c = new Compaction(options_, level);
@@ -1376,7 +1395,7 @@ Compaction* VersionSet::PickCompaction() {
     assert(!c->inputs_[0].empty());
   }
 
-  if(!size_compaction) {
+  if(!split_compaction) {
     SetupOtherInputs(c);
   }
 

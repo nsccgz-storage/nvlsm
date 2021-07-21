@@ -103,10 +103,15 @@ Status TableCache::Get(const ReadOptions& options, uint64_t file_number,
                                              const Slice&)) {
   Cache::Handle* handle = nullptr;
   // open table
+  // what FindTable does is it will try to load the metadata of the table
+  // if that metadata is not in cache.
   Status s = FindTable(file_number, file_size, &handle);
   if (s.ok()) {
     Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
     // read block into cache.
+    // since datablock of the table might not be in the cache, we might need to
+    // read that data block from the disk into cache.
+    // this is a little confusing 
     s = t->InternalGet(options, k, arg, handle_result);
     cache_->Release(handle);
   }
