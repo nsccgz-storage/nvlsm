@@ -73,6 +73,9 @@ TableBuilderNVMSplit::TableBuilderNVMSplit(const Options &option, std::string fn
 }
 
 
+// how about we just add value to the data part 
+// and put all the keys to the key meta part
+// this is my original thought. it' ok
 /* ------------
  * | key_size | // 64bit
  * ------------
@@ -86,10 +89,10 @@ TableBuilderNVMSplit::TableBuilderNVMSplit(const Options &option, std::string fn
 void TableBuilderNVMSplit::Add(const Slice& key, const Slice& value){
 
     int total_size = key.size() + value.size() + 8 + 8;
-    if(offset_ + total_size > option_.max_nvm_table_size) {
-        std::cout << "size of adding kv execeeds limit" << std::endl;
-        return;
-    }
+    // if(offset_ + total_size > option_.max_nvm_table_size) {
+    //     std::cout << "size of adding kv execeeds limit" << std::endl;
+    //     return;
+    // }
 
 
     // std::string key_value;
@@ -115,6 +118,9 @@ void TableBuilderNVMSplit::Add(const Slice& key, const Slice& value){
 Status TableBuilderNVMSplit::Finish(){
     std::string meta_str;
 
+    assert(meta_data_.size() > 0);
+    // build metadata , actually how to build appropriate meta data 
+    // format is worth thinking 
     for(int i=0; i < meta_data_.size(); i++) {
         Slice key = meta_data_[i]->key.Encode();
         PutFixed64(&meta_str, key.size());
@@ -129,11 +135,15 @@ Status TableBuilderNVMSplit::Finish(){
     raw_data_size_ = buffer_.size();
 
 
-    if(offset_ + meta_str.size() > option_.max_nvm_table_size) {
-        std::string msg =  "size exceeds while appending meta data size:" + std::to_string(meta_str.size()) +  "table limit:" + std::to_string(option_.max_nvm_table_size) ;
-        return Status::IOError(msg);
-    } 
+    // if(offset_ + meta_str.size() > option_.max_nvm_table_size) {
+    //     std::string msg =  "size exceeds while appending meta data size:" + std::to_string(meta_str.size()) +  "table limit:" + std::to_string(option_.max_nvm_table_size) ;
+    //     return Status::IOError(msg);
+    // } 
 
+    std::string meta_index_str;
+    int midx_offset = raw_data_size_ + meta_data_size_;
+    MetaIndexEntry* midx_entry = new MetaIndexEntry(meta_data_[0]->key.Encode(), meta_data_.back()->key.Encode(), raw_data_size_, meta_data_size_, fname_);
+    midx_entry->EncodeTo(&meta_index_str);
 
     // try to open a file in pmem and pmem_copy all the data in the 
     // buffer to the pmem file.
@@ -143,16 +153,20 @@ Status TableBuilderNVMSplit::Finish(){
     // pmem_persist(raw_, offset_ + meta_str.size());
 
     WritableFile* file;
-    Status s = option_.env->NewFixedSizeWritableFile(fname_, &file, buffer_.size() + meta_str.size());
+    // add footer size to file_total_size
+    uint64_t file_total_size = buffer_.size() + meta_str.size() + meta_index_str.size();
+    Status s = option_.env->NewFixedSizeWritableFile(fname_, &file, file_total_size);
 
     if(s.ok()) {
         s = file->Append(buffer_);
-
     }
     
     if(s.ok()) {
         s =  file->Append(meta_str);
+    }
 
+    if(s.ok()) {
+        s = file->Append(meta_index_str);
     }
 
     if(!s.ok()) {

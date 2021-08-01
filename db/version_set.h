@@ -359,6 +359,7 @@ class Compaction {
 
   bool IsSplitCompaction() const;
 
+  bool IsLevelCompaction() const;
 
  private:
   friend class Version;
@@ -372,6 +373,8 @@ class Compaction {
   VersionEdit edit_;
 
   // Each compaction reads inputs from "level_" and "level_+1"
+  // for level compaction we could put all files in "level_ + 1"
+  // to inputs_[1], but it may be possible that 
   std::vector<FileMetaData*> inputs_[2];  // The two sets of inputs
 
   // State used to check for number of overlapping grandparent files

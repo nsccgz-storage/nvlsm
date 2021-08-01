@@ -28,6 +28,7 @@ struct FileMetaData {
   // for nvm recover
   uint64_t raw_data_size;
   uint64_t meta_size;
+  uint64_t meta_index_size;
 };
 
 class VersionEdit {

@@ -844,7 +844,7 @@ void DBImpl::BackgroundCompaction() {
     if(compact->compaction->IsSplitCompaction()) {
       status = DoSplitWork(compact);
     } else {
-      status = DoCompactionWork(compact);
+      status = DoLevelCompactionWork(compact);
     }
     // status = DoCompactionWork(compact);
     if (!status.ok()) {
@@ -948,7 +948,16 @@ Status DBImpl::OpenCompactionOutputFile(CompactionState* compact) {
   return s;
 }
 
-Status DBImpl::FinishSplitCompaction
+Status DBImpl::FinishSplitCompaction(CompactionStateNVM* compact) {
+
+  return Status::OK();
+}
+
+Status DBImpl::FinishLevelCompaction(CompactionStateNVM* compact) {
+
+  return Status::OK();
+}
+
 
 Status DBImpl::FinishCompactionOutputFile(CompactionState* compact,
                                           Iterator* input) {
@@ -1080,7 +1089,7 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
 
     Slice key = input->key();
     bool drop = false;
-    if(!ParsedInternalKey(key, &ikey)) {
+    if(!ParseInternalKey(key, &ikey)) {
       current_user_key.clear();
       has_current_user_key = false;
       last_sequence_for_key = kMaxSequenceNumber;
@@ -1100,7 +1109,7 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
 
     if(!drop) {
       if(compact->builder_nvm == nullptr) {
-        status = OpenCompactionOutputFile(compact);
+        status = NewSplitCompactionOutput(compact);
         if(!status.ok()){
           break;
         }
@@ -1116,7 +1125,7 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
       // TODO: specify the first table size threshold
       if(compact->builder_nvm->FileSize() >= 
          compact->compaction->MaxOutputFileSize()) {
-        status = FinishCompactionOutputFile(compact, input);
+        status = FinishSplitCompaction(compact);
         if(!status.ok()) {
           break;
         }
@@ -1130,7 +1139,7 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
     }
 
     if(status.ok() && compact->builder_nvm != nullptr) {
-      status = FinishCompactionOutputFile(compact, input);
+      status = FinishSplitCompaction(compact);
     }
 
     if(status.ok()) {
@@ -1155,7 +1164,7 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
     stats_[compact->compaction->level() + 1].Add(stats);
 
     if (status.ok()) {
-      status = InstallCompactionResults(compact);
+      status = InstallCompactionResultsNVM(compact);
     }
     if (!status.ok()) {
       RecordBackgroundError(status);
@@ -1168,6 +1177,194 @@ Status DBImpl::DoSplitWork(CompactionStateNVM* compact) {
   }
 
 }
+
+Status DBImpl::DoLevelCompactionWork(CompactionStateNVM* compact) {
+  const uint64_t start_micros = env_->NowMicros();
+  int64_t imm_micros = 0;  // Micros spent doing imm_ compactions
+
+  Log(options_.info_log, "Compacting %d@%d + %d@%d files",
+      compact->compaction->num_input_files(0), compact->compaction->level(),
+      compact->compaction->num_input_files(1),
+      compact->compaction->level() + 1);
+
+  assert(versions_->NumLevelFiles(compact->compaction->level()) > 0);
+  assert(compact->builder_nvm == nullptr);
+  assert(compact->outfile == nullptr);
+  if (snapshots_.empty()) {
+    compact->smallest_snapshot = versions_->LastSequence();
+  } else {
+    compact->smallest_snapshot = snapshots_.oldest()->sequence_number();
+  }
+
+  Iterator* input = versions_->MakeInputIterator(compact->compaction);
+  mutex_.Unlock();
+
+  input->SeekToFirst();
+  // [s1, e1] [s2, e2], [s3, e3]
+  // [s1, s2], [s2, s3], [s3, inf]
+  // if key in [s1, s2], then it should be appended to
+  // table [s1, e1]
+  // if key >= s3, then it should be appended to [s3, e3]
+  // but what if there is a key that us smaller than s1?
+  // we could create some new SSTable for this situation
+  // or we could append all the data 
+  // to the [s1, e1]
+  // we have a iterator for the smallest key in the 
+  
+  Status status;
+  ParsedInternalKey ikey;
+  std::string current_user_key;
+  bool has_current_user_key = false;
+  SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
+  
+  int prev_idx = -1;
+  int up_level_file_num = compact->compaction->num_input_files(1);
+  int cur_idx = 0;
+  while (input->Valid() && !shutting_down_.load(std::memory_order_acquire)) {
+    // Prioritize immutable compaction work
+    if (has_imm_.load(std::memory_order_relaxed)) {
+      const uint64_t imm_start = env_->NowMicros();
+      mutex_.Lock();
+      if (imm_ != nullptr) {
+        CompactMemTable();
+        // Wake up MakeRoomForWrite() if necessary.
+        background_work_finished_signal_.SignalAll();
+      }
+      mutex_.Unlock();
+      imm_micros += (env_->NowMicros() - imm_start);
+    }
+
+    // we may use the whole uppper level meta data
+    // it strikes me that we could pre-select the files in "level_ + 1"
+    // since the smallest key of and max key of "level_" is known 
+    Slice key = input->key();
+    if (compact->compaction->ShouldStopBefore(key) &&
+        compact->builder_nvm != nullptr) {
+      status = FinishLevelCompaction(compact);
+      if (!status.ok()) {
+        break;
+      }
+    }
+    
+    // Handle key/value, add to state, etc.
+    bool drop = false;
+    if (!ParseInternalKey(key, &ikey)) {
+      // Do not hide error keys
+      current_user_key.clear();
+      has_current_user_key = false;
+      last_sequence_for_key = kMaxSequenceNumber;
+    } else {
+      if (!has_current_user_key ||
+          user_comparator()->Compare(ikey.user_key, Slice(current_user_key)) !=
+              0) {
+        // First occurrence of this user key
+        current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());
+        has_current_user_key = true;
+        last_sequence_for_key = kMaxSequenceNumber;
+      }
+
+      if (last_sequence_for_key <= compact->smallest_snapshot) {
+        // Hidden by an newer entry for same user key
+        drop = true;  // (A)
+      } else if (ikey.type == kTypeDeletion &&
+                 ikey.sequence <= compact->smallest_snapshot &&
+                 compact->compaction->IsBaseLevelForKey(ikey.user_key)) {
+        // For this user key:
+        // (1) there is no data in higher levels
+        // (2) data in lower levels will have larger sequence numbers
+        // (3) data in layers that are being compacted here and have
+        //     smaller sequence numbers will be dropped in the next
+        //     few iterations of this loop (by rule (A) above).
+        // Therefore this deletion marker is obsolete and can be dropped.
+        drop = true;
+      }
+      last_sequence_for_key = ikey.sequence;
+    }
+
+    
+    
+    if(!drop) {
+      // comparing user key is ok, since we will search from newest to oldest.
+      bool is_table_idx_moved = false;
+      while(user_comparator()->Compare(ikey.user_key, compact->compaction->input(1, cur_idx)->smallest.user_key()) > 0) {
+        cur_idx++;
+        is_table_idx_moved = true;
+      }
+      prev_idx = cur_idx -1;
+
+      // we also need to check if we have move from one SSTable to another SSTable;
+      if(is_table_idx_moved) {
+        // first finish prev open table builder, if prev table builder is not null
+        // then open anoter table builder.
+        if(compact->builder_nvm != nullptr) {
+          status = FinishLevelCompaction(compact);
+          if(!status.ok()) {
+            break;
+          }
+
+        }
+      }
+
+      if(compact->builder_nvm == nullptr) {
+        // here we will open a level table builder
+        status = NewLevelCompactionOutput(compact);
+        if(!status.ok()) {
+          break;
+        }
+      }
+
+      compact->builder_nvm->Add(key, input->value());
+      
+
+    }
+    input->Next();
+
+  }
+
+  if (status.ok() && shutting_down_.load(std::memory_order_acquire)) {
+    status = Status::IOError("Deleting DB during compaction");
+  }
+  // finish remaining open table builder.
+  if(status.ok() && compact->builder_nvm != nullptr) {
+    status = FinishLevelCompaction(compact);
+  }
+
+  if(status.ok()) {
+    status = input->status();
+  }
+  delete input;
+  input = nullptr;
+  // add compaction stats.
+  CompactionStats stats;
+  stats.micros = env_->NowMicros() - start_micros - imm_micros;
+  for (int which = 0; which < 2; which++) {
+    for (int i = 0; i < compact->compaction->num_input_files(which); i++) {
+      stats.bytes_read += compact->compaction->input(which, i)->file_size;
+    }
+  }
+  for (size_t i = 0; i < compact->outputs.size(); i++) {
+    stats.bytes_written += compact->outputs[i].file_size;
+  }
+
+  mutex_.Lock();
+  stats_[compact->compaction->level() + 1].Add(stats);
+
+  // install compaction results, update to a new version.
+  if (status.ok()) {
+
+    status = InstallCompactionResultsNVM(compact);
+  }
+  if (!status.ok()) {
+    RecordBackgroundError(status);
+  }
+
+  VersionSet::LevelSummaryStorage tmp;
+  Log(options_.info_log, "compacted to: %s", versions_->LevelSummary(&tmp));
+  return status;
+
+
+}
+
 
 Status DBImpl::DoCompactionWork(CompactionState* compact) {
   const uint64_t start_micros = env_->NowMicros();

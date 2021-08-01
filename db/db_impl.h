@@ -155,10 +155,15 @@ class DBImpl : public DB {
   Status DoSplitWork(CompactionStateNVM* compact) 
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
+  Status DoLevelCompactionWork(CompactionStateNVM* compact)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
 
   Status OpenCompactionOutputFile(CompactionState* compact);
   Status FinishCompactionOutputFile(CompactionState* compact, Iterator* input);
-  Status InstallCompactionResults(CompactionState* compact)
+  Status FinishSplitCompaction(CompactionStateNVM* compact);
+  Status FinishLevelCompaction(CompactionStateNVM* compact);
+  Status InstallCompactionResults(CompactionState* compact);
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status InstallCompactionResultsNVM(CompactionStateNVM *compac)
