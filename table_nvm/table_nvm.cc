@@ -1,13 +1,15 @@
 #include <string>
-#include <libpmemobj++/make_persistent.hpp>
-#include <libpmemobj++/p.hpp>
-#include <libpmemobj++/persistent_ptr.hpp>
-#include <libpmemobj++/pool.hpp>
-#include <libpmemobj++/transaction.hpp>
-#include <libpmemobj++/utils.hpp>
+// #include <libpmemobj++/make_persistent.hpp>
+// #include <libpmemobj++/p.hpp>
+// #include <libpmemobj++/persistent_ptr.hpp>
+// #include <libpmemobj++/pool.hpp>
+// #include <libpmemobj++/transaction.hpp>
+// #include <libpmemobj++/utils.hpp>
 
 #include "leveldb/env.h"
+#include "table/merger.h"
 #include "table_nvm.h"
+
 
 
 using namespace pmem::obj;
@@ -17,7 +19,7 @@ namespace leveldb {
 struct TableNVM::Rep{
     ~Rep() {
         // delete 
-        delete meta;
+        delete keys_meta;
     }
 
     Options options;
@@ -26,13 +28,60 @@ struct TableNVM::Rep{
     uint64_t cache_id;
 
     // when open 
-    NVMTableMeta* meta;
+    NVMTableMeta* keys_meta;
+    MetaIndexEntry* meta;
+};
+
+class TableNVMSegIterator: public Iterator {
+public:
+    explicit TableNVMSegIterator(const TableNVM* table_nvm) {
+
+    }
+
+    bool Valid() const override {
+
+    }
+
+    void Seek(const Slice& k) override {
+
+    }
+
+    void SeekToFirst() override {
+
+    }
+
+    void SeekToLast() override {
+
+    }
+
+    void Next() override {
+
+    }
+
+    void Prev() override {}
+
+    Slice key() const override {
+
+    }
+    
+    Slice value() const override {
+
+    }
+
+    Status status() const override { return Status::OK();}
+
+private:
+    const TableNVM* table_;
+    Iterator* key_meta_iter;
 };
 
 class TableNVMIterator: public Iterator {
 public:
-    explicit TableNVMIterator(const TableNVM*tablenvm): tablenvm_(tablenvm) {
-        bucket_pos_ = -1;
+    explicit TableNVMIterator(const TableNVM*tablenvm): 
+        tablenvm_(tablenvm) {
+        // merging all prev segment table iterator
+
+        
     }
 
     TableNVMIterator(const TableNVMIterator&) = delete;
@@ -41,34 +90,30 @@ public:
     ~TableNVMIterator() override = default;
 
     bool Valid() const override {
-        return bucket_pos_ >=0 && bucket_pos_ <= tablenvm_->buckets_.size()-1 
-                && bucket_index_ >=0 && bucket_index_ <= tablenvm_->buckets_[bucket_pos_].size()-1;
-        
+        return key_index_iter_->Valid();            
     }
     void Seek(const Slice& k) override {
         
     }
     void SeekToFirst() override {
-        bucket_pos_ = 0;
-        bucket_index_ = 0;
+        key_index_iter_->SeekToFirst();
+
     }
     void SeekToLast() override {
-        bucket_pos_ = tablenvm_->buckets_.size() - 1;
-        bucket_index_ = tablenvm_->buckets_[bucket_pos_].size()-1;
-    }//{pos_ = tablenvm_->cur_item_num_;}
+        key_index_iter_->SeekToLast();
+    }
     void Next() override {
         assert(Valid());
-        //cur_item_ = cur_item_->next_item.get();
+        key_index_iter_->Next();
+        
 
     }
     void Prev() override {}
     Slice key() const override{
-        //assert(Valid());
-        return tablenvm_->buckets_[bucket_pos_][bucket_index_].key;
+        return  key_;
     }
-    Slice Value() const override {
+    Slice value() const override {
 
-        return Slice(tablenvm_->buckets_rep_[bucket_pos_].data(), tablenvm_->buckets_[bucket_pos_])
         
     }
 
@@ -86,94 +131,86 @@ private:
     int find_greater_than_or_equal_to(const Slice&k) {
         
     }
-    const TableNVM *tablenvm_;
-    int bucket_pos_;
-    int bucket_index_;
-    string key_;
-    Slice val_;
-    const char * const data_;
-    //item *cur_item_; // ths item pointer in the bucket list
 
+    void ParseNextKey() {
+        key_.assign(key_index_iter_->key().data(), key_index_iter_->key().size());
+        Slice v_pos_val = key_index_iter_->value();
+        uint64_t offset =  DecodeFixed64(v_pos_val.data());
+
+        Slice key_len_result;
+        Status s = tablenvm_->rep_->file->Read(offset, sizeof(uint64_t), &key_len_result, nullptr);
+        if(!s.ok()) {
+            printf("parseNextKey read key len failed\n");
+            exit(1);
+        }
+        uint64_t key_len = DecodeFixed64(key_len_result.data());
+        offset += sizeof(uint64_t);
+        Slice key;
+        s = tablenvm_->rep_->file->Read(offset, key_len, &key, nullptr);
+        if(!s.ok()) {
+
+        }
+        
+    }
+
+    const TableNVM *tablenvm_;
+
+    Iterator* key_index_iter_;
+    uint64_t val_offset;
+    std::string key_;
+    Slice val_;
 };
 
-TableNVM::TableNVM(pool_base &pop, const OptionsNvm &nvmoption, const InternalKeyComparator *comp )
-    :option_nvm_(nvmoption), comp_(comp) {
-    
-    //buckets_num_ = 0;
-    transaction::exec_tx(pop, [&] {
-        //cur_item_num_ = 0;
-        //num_item_limit_ = nvmoption.Num_item_table;
-        //const uint item_num = nvmoption.Num_item_table;
-        //items_ = make_persistent<item>();
-        //item_size_limit_ = nvmoption.Item_size;
-        
-
-    });
     
 
-}
 
-Status TableNVM::Get(pool_base &pop, const Slice &key, void *arg,
-            void (*handle_result)(void*, const Slice&, const Slice&)) {
-    //auto pool = pmem::obj::pool_by_vptr(this);
-    Iterator *iter = NewIterator();
-    assert(!iter->Valid());
-    iter->Seek(key);
-    if(iter->Valid()) {
 
+
+
+
+Iterator *TableNVM::NewIterator(const ReadOptions& read_options) const {
+
+    Iterator* seg_iter = new TableNVMSegIterator(this);
+    if(rep_->meta->GetPrevFileNum() != 0) {
+        Open()
     }
-    return Status::OK();
-
+    return new TableNVMIterator(this);
 }
 
+Status TableNVM::Open(const Options& options, RandomAccessFile* file,
+                    uint64_t file_size, TableNVM** table, Footer* footer) {
+    // read meta data 
 
+    *table = nullptr;
 
-Status TableNVM::Add(const Slice& key, const Slice& value) {
-    // auto pool = pmem::obj::pool_by_vptr(this);
+    Rep* rep = new Rep();
+    rep->options = options;
+    rep->file = file;
+    rep->keys_meta = new NVMTableMeta();
+    rep->meta = new MetaIndexEntry();
 
-    // transaction::exec_tx(pool, [&]{
-    //     assert()
-    // });
-    // assert(cur_item_num_ < num_item_limit_); 
-    InternalKey ikey;
-    bool decode_status = ikey.DecodeFrom(key);
-    if(!decode_status) return Status::Corruption("tablenvm", "add");
-
-    // locate the bucket that this key appended
-    int bucket_idx = find_less_or_equal_idx(ikey);
-
-    persistent_ptr<pmem::obj::string> buffer = &(buckets_rep_[bucket_idx]);
-    PutVarint32NVM(buffer.get(), key.size());
-    PutVarint32NVM(buffer.get(), value.size());
-
-    buffer->append(key.data(), key.size());
-    buffer->append(value.data(), value.size());
-    return Status::OK();
-
-}
-
-int TableNVM::find_less_or_equal_idx(const InternalKey &ikey) {
-    int left_idx = 0;
-    int right_idx = buckets_keys.size();
-    while(left_idx < right_idx) {
-        int mid_idx = (left_idx + right_idx) / 2;
-        const pmem::obj::string &head_ikey = buckets_keys[mid_idx].key;
-        Slice internal_key(head_ikey);
-        InternalKey mid_internal_key;
-        mid_internal_key.DecodeFrom(internal_key);
-        if(comp_->Compare(mid_internal_key, ikey) > 0) {
-            right_idx = mid - 1;
-        } else {
-            left_idx = mid;
-        }
+    Slice* result_meta = nullptr;
+    char buf[footer->meta_index_size];
+    // we are assuming that we will definitely using pmem 
+    Status s = file->Read(footer->meta_index_offset, footer->meta_index_size, result_meta, buf);
+    if(!s.ok()) {
+        delete rep;
+        return s;
     }
 
-    return left_idx;
-}
+    Slice* result_key_meta = nullptr;
+    char *key_meta_buf = new char[footer->key_meta_size];
+    s= file->Read(footer->key_meta_offset, footer->key_meta_size, result_key_meta, key_meta_buf);
 
+    if(!s.ok()) {
+        return s;
+    }
 
+    rep->keys_meta->DecondeFrom(result_key_meta);
+    rep->meta->DecodeFrom(result_meta);
 
-Iterator *TableNVM::NewIterator() const {
-    return nullptr;
+    *table = new TableNVM(rep);
+    
+    return Status::OK();
 }
 }

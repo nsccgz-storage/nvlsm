@@ -172,7 +172,6 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       db_lock_(nullptr),
       shutting_down_(false),
       background_work_finished_signal_(&mutex_),
-      mem_(nullptr),
       imm_(nullptr),
       has_imm_(false),
       logfile_(nullptr),

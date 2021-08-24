@@ -6,6 +6,7 @@
 
 #include "leveldb/export.h"
 #include "table_nvm/table_nvm.h"
+#include "table_nvm/table_cache_nvm.h"
 namespace leveldb {
 
 class TableNVM;
@@ -60,6 +61,10 @@ public:
 
   uint64_t MetaDataSize() const override; //{ return meta_data_size_;}
 
+  uint64_t NumEntries() const override;
+
+  Status status() const override;
+
 private:
 
   // char *raw_;
@@ -79,7 +84,35 @@ private:
 
 class LEVELDB_EXPORT TableBuilderNVMLevel :public TableBuilderNVM{
 public:
+  TableBuilderNVMLevel(const Options &option, std::string fname, TableCache* table_cache, FileMetaData* prev_file_meta);
+  TableBuilderNVMLevel(const TableBuilderNVMLevel&) = delete;
+  TableBuilderNVMLevel& operator=(const TableBuilderNVMLevel&) = delete;
+  ~TableBuilderNVMLevel() {}
+  // Add key,value to the table being constructed.
+  // REQUIRES: key is after any previously added key according to comparator.
+  // REQUIRES: Finish(), Abandon() have not been called
+  void Add(const Slice& key, const Slice& value) override;
 
+    
+  Status Finish() override;
+
+  uint64_t FileSize() const override;// {return offset_;} 
+
+  uint64_t RawDataSize() const override; //{ return raw_data_size_;}
+
+  uint64_t MetaDataSize() const override; //{ return meta_data_size_;}
+
+
+
+private:
+  std::string buffer_;
+
+  FileMetaData* prev_file_meta_;
+  TableCache* table_cache_;
+
+  std::string fname_;
+  std::vector<KeyMetaData*> meta_data_;
+  Options option_;
 };
 }
 

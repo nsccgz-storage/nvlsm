@@ -43,7 +43,7 @@ class LEVELDB_EXPORT Table {
   Table(const Table&) = delete;
   Table& operator=(const Table&) = delete;
 
-  ~Table();
+  virtual ~Table();
 
   // Returns a new iterator over the table contents.
   // The result of NewIterator() is initially invalid (caller must
@@ -58,13 +58,21 @@ class LEVELDB_EXPORT Table {
   // be close to the file length.
   uint64_t ApproximateOffsetOf(const Slice& key) const;
 
+  virtual Iterator* NewKeyIterator(const ReadOptions&) const;
+
+  virtual Iterator* NewMeteKeyIterator(const ReadOptions&) const;
+
+protected:
+  struct Rep;
+  explicit Table() : rep_(nullptr){}
+  explicit Table(Rep* rep) : rep_(rep) {}
+
+
  private:
   friend class TableCache;
-  struct Rep;
 
   static Iterator* BlockReader(void*, const ReadOptions&, const Slice&);
 
-  explicit Table(Rep* rep) : rep_(rep) {}
 
   // Calls (*handle_result)(arg, ...) with the entry found after a call
   // to Seek(key).  May not make such a call if filter policy says

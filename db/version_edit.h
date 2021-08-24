@@ -29,6 +29,9 @@ struct FileMetaData {
   uint64_t raw_data_size;
   uint64_t meta_size;
   uint64_t meta_index_size;
+
+  // once we open a table, we will read all the meta keys into the rep of the table
+  // this sounds reasonable
 };
 
 class VersionEdit {

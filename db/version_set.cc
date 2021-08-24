@@ -1336,6 +1336,12 @@ Compaction* VersionSet::PickCompaction() {
     // since the number of new tables after split compaction will 
     // be twice of the original number.
 
+    // 2021.8.21 what' s our purpose for doing split compaction?
+    // we want to increase the get operation speed 
+    // and inspired by MatrixKV, the level compaction could reduce write stall under write intensive workload
+    // can we reduce write amplification?
+    //  
+
     
     // we are definitely need a split score in case there are too many tables in the upper level 
     // that exceed tabe limit compared to lower level.

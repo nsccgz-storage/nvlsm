@@ -34,6 +34,14 @@ class TableCache {
   Iterator* NewIterator(const ReadOptions& options, uint64_t file_number,
                         uint64_t file_size, Table** tableptr = nullptr);
 
+  // this will expose the internal info about the table
+  // but this is the easy way to do, can't come out with another elegant 
+  // soluton - _ - 
+  Iterator* NewKeyIterator(const ReadOptions& options, int64_t file_number);
+
+  Iterator* NewMetaKeyIterator(const ReadOptions& Options, int64_t file_number);
+  
+
   // If a seek to internal key "k" in specified file finds an entry,
   // call (*handle_result)(arg, found_key, found_value).
   Status Get(const ReadOptions& options, uint64_t file_number,
@@ -44,6 +52,7 @@ class TableCache {
   void Evict(uint64_t file_number);
 
  private:
+//  friend class TableBuilderNVMLevel;
   Status FindTable(uint64_t file_number, uint64_t file_size, Cache::Handle**);
 
   Env* const env_;

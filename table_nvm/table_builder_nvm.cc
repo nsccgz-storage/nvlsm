@@ -5,7 +5,9 @@
 #include "table_nvm/table_builder_nvm.h"
 #include "db/version_edit.h"
 #include "db/filename.h"
+#include "db/table_cache.h"
 #include "leveldb/env.h"
+#include "leveldb/table.h"
 
 
 #include "table_nvm/table_nvm.h"
@@ -20,15 +22,15 @@ Status BuildTableNVM(const std::string& dbname, Env* env, const Options& options
     meta->file_size = 0;
     iter->SeekToFirst();
 
-    std::string fname = TableFileName(dbname, meta->name);
+    std::string fname = TableFileName(dbname, meta->number);
     if(iter->Valid()) {
         char *nvm_mem;
-        s = NewNVMFile(fname, &nvm_mem);
+        // s = NewNVMFile(fname, &nvm_mem);
         if(!s.ok()) {
             return s;
         }
 
-        TableBuilderNVM *builder = new TableBuilderNVMSplit(options, nvm_mem);
+        TableBuilderNVM *builder = new TableBuilderNVMSplit(options, fname);
         meta->smallest.DecodeFrom(iter->key());
         Slice key;
         for(; iter->Valid(); iter->Next()) {
@@ -54,7 +56,7 @@ Status BuildTableNVM(const std::string& dbname, Env* env, const Options& options
     if(s.ok() && meta->file_size > 0) {
 
     } else {
-        RemoveNVMFile(fname);
+        // RemoveNVMFile(fname);
         
     }
 
@@ -142,7 +144,7 @@ Status TableBuilderNVMSplit::Finish(){
 
     std::string meta_index_str;
     int midx_offset = raw_data_size_ + meta_data_size_;
-    MetaIndexEntry* midx_entry = new MetaIndexEntry(meta_data_[0]->key.Encode(), meta_data_.back()->key.Encode(), raw_data_size_, meta_data_size_, fname_);
+    MetaIndexEntry* midx_entry = new MetaIndexEntry(meta_data_[0]->key.Encode(), meta_data_.back()->key.Encode(), raw_data_size_, meta_data_size_, 0);
     midx_entry->EncodeTo(&meta_index_str);
 
     // try to open a file in pmem and pmem_copy all the data in the 
@@ -182,13 +184,117 @@ Status TableBuilderNVMSplit::Finish(){
     return Status::OK();
 }
 
-  uint64_t TableBuilderNVMSplit::FileSize() const {return raw_data_size_ + meta_data_size_;} 
+uint64_t TableBuilderNVMSplit::FileSize() const {return raw_data_size_ + meta_data_size_;} 
 
-  uint64_t TableBuilderNVMSplit::RawDataSize() const { return raw_data_size_;}
+uint64_t TableBuilderNVMSplit::RawDataSize() const { return raw_data_size_;}
 
-  uint64_t TableBuilderNVMSplit::MetaDataSize() const{ return meta_data_size_;}
+uint64_t TableBuilderNVMSplit::MetaDataSize () const{ return meta_data_size_;}
 
 
 
+
+
+
+TableBuilderNVMLevel::TableBuilderNVMLevel(const Options &option, std::string fname, TableCache* table_cache, FileMetaData* prev_file_meta){
+    table_cache_ = table_cache;
+    prev_file_meta_ = prev_file_meta;
+}
+
+// actually for TableBuilderNVMLevel, we could set a table size limit for it,
+// if the size of the keys that is to be created for current segment exceed the limit
+// we could finish current tableBuilderNVM and create a new TableBuilderNVM
+// it may happen that new TableNVM is relatively small since the latter keys 
+// no, I will not implement this idea.
+void TableBuilderNVMLevel::Add(const Slice& key, const Slice& value){
 
 }
+
+Status TableBuilderNVMLevel::Finish(){
+    // this repeated code can be encapsulated 
+    // as a function
+    std::string meta_str;
+
+    assert(meta_data_.size() > 0);
+    // build metadata , actually how to build appropriate meta data 
+    // format is worth thinking 
+    for(int i=0; i < meta_data_.size(); i++) {
+        Slice key = meta_data_[i]->key.Encode();
+        PutFixed64(&meta_str, key.size());
+
+        meta_str.append(key.data(), key.size());
+
+        PutFixed64(&meta_str, meta_data_[i]->offset);
+        PutFixed64(&meta_str, meta_data_[i]->total_size);
+
+    }
+    // meta_data_size_ = meta_str.size();
+    // raw_data_size_ = buffer_.size();
+
+
+    // ReadOptions read_option;
+    // read_option.fill_cache = false;
+    // Iterator* meta_index_iter = table_cache_->NewMetaKeyIterator(read_option, prev_file_meta_->number);
+
+    // Iterator* index_key_iter = table_cache_->NewKeyIterator(read_option, prev_file_meta_->number);
+    // std::string prev_table_meta_content;
+
+    // fetch entries through Cache class, we have fill_cache property to
+    // tell the Cache not to cache the entries we read 
+
+    // meta_index_iter->SeekToFirst();
+
+
+    int meta_size = meta_str.size();
+    int meta_offset = buffer_.size();
+
+    MetaIndexEntry* meta_idx_entry = new MetaIndexEntry(meta_data_[0]->key.Encode(), meta_data_.back()->key.Encode(),
+                                                        meta_offset, meta_size, prev_file_meta_->number);
+    // meta_idx_entry->EncodeTo(&)
+    // actually we could just append the final file, since size could be large
+
+    std::string cur_meta_idx_str;
+    meta_idx_entry->EncodeTo(&cur_meta_idx_str);
+
+    WritableFile* file;
+    uint64_t file_total_size = buffer_.size() + meta_str.size() + cur_meta_idx_str.size();
+    Status s  = option_.env->NewFixedSizeWritableFile(fname_, &file, file_total_size);
+
+    if(s.ok()) {
+        s = file->Append(buffer_);
+    }
+
+    if(s.ok()) {
+        s = file->Append(meta_str);
+    }
+
+    if(s.ok()) {
+        s = file->Append(cur_meta_idx_str);
+    }
+
+
+
+    if(!s.ok()) {
+        delete file;
+        return s;
+    }
+
+    s = file->Close();
+    delete file;
+    file = nullptr;
+
+    return Status::OK();
+}
+    
+// we can cast the table fetched from tablecached to TableNVM, is it ok?
+
+uint64_t TableBuilderNVMLevel::FileSize() const {
+    return 0;
+}
+
+    
+
+}
+
+
+
+
