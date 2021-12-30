@@ -38,9 +38,16 @@ include(CheckIncludeFile)
 check_include_file("unistd.h" HAVE_UNISTD_H)
 
 include(CheckLibraryExists)
+
+set(LIBPMEM_DIR "/usr/local/lib")
+link_directories(
+  ${LIBPMEM_DIR} 
+)
+
 check_library_exists(crc32c crc32c_value "" HAVE_CRC32C)
 check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
 check_library_exists(tcmalloc malloc "" HAVE_TCMALLOC)
+# check_library_exists(libpmem libpmem "" HAVE_LIBPMEM)
 
 include(CheckCXXSymbolExists)
 # Using check_cxx_symbol_exists() instead of check_c_symbol_exists() because
@@ -169,6 +176,12 @@ target_sources(leveldb
     "table/table.cc"
     "table/two_level_iterator.cc"
     "table/two_level_iterator.h"
+    "table_nvm/table_builder_nvm.cc"
+    "table_nvm/table_builder_nvm.h"
+    "table_nvm/table_cache_nvm.cc"
+    "table_nvm/table_cache_nvm.h"
+    "table_nvm/table_nvm.cc"
+    "table_nvm/table_nvm.h"
     "util/arena.cc"
     "util/arena.h"
     "util/bloom.cc"
@@ -273,9 +286,13 @@ endif(HAVE_CRC32C)
 if(HAVE_SNAPPY)
   target_link_libraries(leveldb snappy)
 endif(HAVE_SNAPPY)
-if(HAVE_TCMALLOC)
-  target_link_libraries(leveldb tcmalloc)
-endif(HAVE_TCMALLOC)
+# if(HAVE_TCMALLOC)
+#   target_link_libraries(leveldb tcmalloc)
+# endif(HAVE_TCMALLOC)
+# if(HAVE_LIBPMEM)
+  message("try to link libpmem library")
+  target_link_libraries(leveldb pmem)
+# endif(HAVE_LIBPMEM)
 
 # Needed by port_stdcxx.h
 find_package(Threads REQUIRED)
@@ -285,6 +302,10 @@ add_executable(leveldbutil
   "db/leveldbutil.cc"
 )
 target_link_libraries(leveldbutil leveldb)
+
+add_executable(comp_test
+  "table_nvm/comp_test.cc")
+target_link_libraries(comp_test leveldb)
 
 if(LEVELDB_BUILD_TESTS)
   enable_testing()

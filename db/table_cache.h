@@ -54,6 +54,7 @@ class TableCache {
  private:
 //  friend class TableBuilderNVMLevel;
   Status FindTable(uint64_t file_number, uint64_t file_size, Cache::Handle**);
+  // Status FindTableNVM(FileMetaData* file_meta, Cache::Handle** handle);
 
   Env* const env_;
   const std::string dbname_;

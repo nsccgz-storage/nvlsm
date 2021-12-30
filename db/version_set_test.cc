@@ -328,6 +328,16 @@ TEST_F(AddBoundaryInputsTest, TestDisjoinFilePointers) {
   ASSERT_EQ(f3, compaction_files_[2]);
 }
 
+// test findTableInterval()
+  // target ["100", "150"]
+  // intervals ["50", "100"], ["100", "180"], ["200", "250"]
+  // return index 0 ?
+
+// test index part iterator
+  // just like 
+
+// test makeNewFiles()
+
 }  // namespace leveldb
 
 int main(int argc, char** argv) {

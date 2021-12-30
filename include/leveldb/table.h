@@ -58,9 +58,9 @@ class LEVELDB_EXPORT Table {
   // be close to the file length.
   uint64_t ApproximateOffsetOf(const Slice& key) const;
 
-  virtual Iterator* NewKeyIterator(const ReadOptions&) const;
+  // virtual Iterator* NewKeyIterator(const ReadOptions&) const;
 
-  virtual Iterator* NewMeteKeyIterator(const ReadOptions&) const;
+  // virtual Iterator* NewMetaKeyIterator(const ReadOptions&) const;
 
 protected:
   struct Rep;

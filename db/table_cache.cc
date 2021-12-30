@@ -5,6 +5,7 @@
 #include "db/table_cache.h"
 
 #include "db/filename.h"
+#include "db/version_edit.h"
 #include "leveldb/env.h"
 #include "leveldb/table.h"
 #include "util/coding.h"
@@ -23,6 +24,11 @@ static void DeleteEntry(const Slice& key, void* value) {
   delete tf;
 }
 
+// static void DeleteEntryNVM(const Slice& key, void *value) {
+//   TableNVM* t = reinterpret_cast<TableNVM*>(value);
+//   delete t;
+// }
+
 static void UnrefEntry(void* arg1, void* arg2) {
   Cache* cache = reinterpret_cast<Cache*>(arg1);
   Cache::Handle* h = reinterpret_cast<Cache::Handle*>(arg2);
@@ -37,6 +43,26 @@ TableCache::TableCache(const std::string& dbname, const Options& options,
       cache_(NewLRUCache(entries)) {}
 
 TableCache::~TableCache() { delete cache_; }
+
+// Status TableCache::FindTableNVM(FileMetaData* file_meta, Cache::Handle** handle) {
+//   Status s;
+//   char buf[sizeof(file_meta->number)];
+//   EncodeFixed64(buf, file_meta->number);
+//   Slice key(buf, sizeof(buf));
+//   *handle = cache_->Lookup(key);
+//   if(*handle == nullptr) {
+//     TableNVM* table = nullptr;
+//     s = TableNVM::Open(options_, file_meta, env_, &table);
+
+//     if(!s.ok()) {
+//       assert(table == nullptr);
+//     } else {
+//       *handle = cache_->Insert(key, table, 1, DeleteEntryNVM);
+//     }
+//   }
+
+//   return s;
+// }
 
 Status TableCache::FindTable(uint64_t file_number, uint64_t file_size,
                              Cache::Handle** handle) {

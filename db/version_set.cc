@@ -18,6 +18,8 @@
 #include "table/two_level_iterator.h"
 #include "util/coding.h"
 #include "util/logging.h"
+#include "port/port.h"
+#include "table_nvm/table_cache_nvm.h"
 
 namespace leveldb {
 
@@ -155,7 +157,57 @@ bool SomeFileOverlapsRange(const InternalKeyComparator& icmp,
   return !BeforeFile(ucmp, largest_user_key, files[index]);
 }
 
-// An internal iterator.  For a given version/level pair, yields
+class Version::InputsIndexIterator: public Iterator {
+ public:
+  InputsIndexIterator(const InternalKeyComparator& icmp,
+                      const std::vector<FileMetaData*>* flist)
+    : icmp_(icmp), flist_(flist), index_(flist->size()) {
+
+    }
+  
+  bool Valid() const override { return index_ < flist_->size(); }
+  void Seek(const Slice& target) override {
+    index_ = FindFile(icmp_, *flist_, target);
+  }
+
+  void SeekToFirst() override { index_ = 0; }
+  void SeekToLast() override {
+    index_ = flist_->empty() ? 0: flist_->size() - 1;
+  }
+
+  void Next() override {
+    assert(Valid());
+    index_++;
+  }
+
+  void Prev() override {
+    assert(Valid());
+    if(index_ == 0) {
+      index_ = flist_->size();
+    } else{
+      index_--;
+    }
+  }
+
+  Slice key() const override {
+    assert(Valid());
+    return (*flist_)[index_]->largest.Encode();
+  }
+
+  Slice value() const override {
+    assert(Valid());
+    EncodeFixed32(buf_, index_);
+    return Slice(buf_, sizeof(buf_));
+  }
+
+  Status status() const override {return Status::OK(); }
+ private:
+  const InternalKeyComparator icmp_;
+  const std::vector<FileMetaData*>* const flist_;
+  uint32_t index_;
+  mutable char buf_[4];
+};
+
 // information about the files in the level.  For a given entry, key()
 // is the largest key that occurs in the file, and value() is an
 // 16-byte value containing the file number and file size, both
@@ -219,6 +271,18 @@ static Iterator* GetFileIterator(void* arg, const ReadOptions& options,
   }
 }
 
+static Iterator* GetTableIterator(void *arg, const ReadOptions& options,
+                                  const Slice& table_idx) {
+  TableCacheNVMAndInputs* cache_inputs = reinterpret_cast<TableCacheNVMAndInputs*>(arg);
+  if(table_idx.size() != 4) {
+    printf("get table iter failed, table idx size not 4\n");
+    return NewErrorIterator(Status::Corruption("TableReader NVM invoked with unexpected value"));
+  } else {
+    uint32_t index = DecodeFixed32(table_idx.data());
+    return cache_inputs->table_cache->NewIterator(options, (*(cache_inputs->inputs))[index], nullptr) ;
+
+  }
+}
 Iterator* Version::NewConcatenatingIterator(const ReadOptions& options,
                                             int level) const {
   return NewTwoLevelIterator(
@@ -226,18 +290,37 @@ Iterator* Version::NewConcatenatingIterator(const ReadOptions& options,
       vset_->table_cache_, options);
 }
 
+static void CleanupDeleteCacheAndInputs(void* arg1, void* arg2) {
+  TableCacheNVMAndInputs* cache_inputs = reinterpret_cast<TableCacheNVMAndInputs*>(arg1);
+  delete cache_inputs;
+}
+Iterator* Version::NewConcatIteratorNVM(const ReadOptions& options,
+                                         int level) const {
+  TableCacheNVMAndInputs* cache_inputs = new TableCacheNVMAndInputs;
+  cache_inputs->inputs = &files_[level];
+  cache_inputs->table_cache = vset_->table_cache_nvm_;
+  Iterator* iter =  NewTwoLevelIterator(new InputsIndexIterator(vset_->icmp_, &files_[level]), &GetTableIterator, cache_inputs, options);
+  iter->RegisterCleanup(CleanupDeleteCacheAndInputs, cache_inputs, nullptr);
+  return iter;
+}
+
 void Version::AddIterators(const ReadOptions& options,
                            std::vector<Iterator*>* iters) {
   // Merge all level zero files together since they may overlap
-  for (size_t i = 0; i < files_[0].size(); i++) {
-    iters->push_back(vset_->table_cache_->NewIterator(
-        options, files_[0][i]->number, files_[0][i]->file_size));
+  // for (size_t i = 0; i < files_[0].size(); i++) {
+  //   iters->push_back(vset_->table_cache_->NewIterator(
+  //       options, files_[0][i]->number, files_[0][i]->file_size));
+  // }
+  for(size_t i=0; i < files_[0].size(); i++) {
+    iters->push_back(vset_->table_cache_nvm_->NewIterator(options, files_[0][i], nullptr));
   }
-
   // For levels > 0, we can use a concatenating iterator that sequentially
   // walks through the non-overlapping files in the level, opening them
   // lazily.
-  for (int level = 1; level < config::kNumLevels; level++) {
+  if(!files_[1].empty()) {
+    iters->push_back(NewConcatIteratorNVM(options, 1));
+  }
+  for (int level = 2; level < config::kNumLevels; level++) {
     if (!files_[level].empty()) {
       iters->push_back(NewConcatenatingIterator(options, level));
     }
@@ -351,9 +434,15 @@ Status Version::Get(const ReadOptions& options, const LookupKey& k,
       state->last_file_read = f;
       state->last_file_read_level = level;
 
-      state->s = state->vset->table_cache_->Get(*state->options, f->number,
-                                                f->file_size, state->ikey,
-                                                &state->saver, SaveValue);
+      if(level == 0 || level == 1) {
+        state->s = state->vset->table_cache_nvm_->Get(*state->options, f, state->ikey, &state->saver, SaveValue);
+      } else {
+        state->s = state->vset->table_cache_->Get(*state->options, f->number,
+                                                  f->file_size, state->ikey,
+                                                  &state->saver, SaveValue);
+  
+      }
+     
       if (!state->s.ok()) {
         state->found = true;
         return false;
@@ -644,8 +733,16 @@ class VersionSet::Builder {
     // Add new files
     for (size_t i = 0; i < edit->new_files_.size(); i++) {
       const int level = edit->new_files_[i].first;
+      // todo: update constructor function,
+      // this does not copy segments of orginal FileMetaData
       FileMetaData* f = new FileMetaData(edit->new_files_[i].second);
       f->refs = 1;
+      if(level == 0 || level == 1) {
+        assert(f->segments.size() > 0);
+        for(int i=0; i < f->segments.size(); i++)  {
+          f->segments[i]->refs++;
+        }
+      }
 
       // We arrange to automatically compact this file after
       // a certain number of seeks.  Let's assume:
@@ -725,6 +822,12 @@ class VersionSet::Builder {
                                     f->smallest) < 0);
       }
       f->refs++;
+      // if(level == 0 || level == 1) {
+      //   for(int i=0; i < f->segments.size(); i++) {
+      //     f->segments[i]->refs++;
+      //   }
+      // }
+      
       files->push_back(f);
     }
   }
@@ -732,11 +835,13 @@ class VersionSet::Builder {
 
 VersionSet::VersionSet(const std::string& dbname, const Options* options,
                        TableCache* table_cache,
+                       TableCacheNVM* table_cache_nvm,
                        const InternalKeyComparator* cmp)
     : env_(options->env),
       dbname_(dbname),
       options_(options),
       table_cache_(table_cache),
+      table_cache_nvm_(table_cache_nvm),
       icmp_(*cmp),
       next_file_number_(2),
       manifest_file_number_(0),  // Filled by Recover()
@@ -746,8 +851,11 @@ VersionSet::VersionSet(const std::string& dbname, const Options* options,
       descriptor_file_(nullptr),
       descriptor_log_(nullptr),
       dummy_versions_(this),
-      current_(nullptr) {
+      current_(nullptr),
+      next_seg_number_(2) {
   AppendVersion(new Version(this));
+  cache_nvm_inputs_.inputs = nullptr;
+  cache_nvm_inputs_.table_cache =table_cache_nvm_;
 }
 
 VersionSet::~VersionSet() {
@@ -786,7 +894,9 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
     edit->SetPrevLogNumber(prev_log_number_);
   }
 
+  // maybe we won't generate new file number
   edit->SetNextFile(next_file_number_);
+  // edit->SetNextSSTable(next_sstable_number_);
   edit->SetLastSequence(last_sequence_);
 
   Version* v = new Version(this);
@@ -1056,13 +1166,17 @@ void VersionSet::Finalize(Version* v) {
       score =
           static_cast<double>(level_bytes) / MaxBytesForLevel(options_, level);
     }
-
+#ifdef DEBUG
+    printf("level:%d, score:%f\n", level, score);
+#endif
     if (score > best_score) {
       best_level = level;
       best_score = score;
     }
   }
-
+#ifdef DEBUG
+  printf("compaction level:%d, compaction score:%f\n", best_level, best_score);
+#endif
   v->compaction_level_ = best_level;
   v->compaction_score_ = best_score;
 }
@@ -1150,14 +1264,26 @@ uint64_t VersionSet::ApproximateOffsetOf(Version* v, const InternalKey& ikey) {
 void VersionSet::AddLiveFiles(std::set<uint64_t>* live) {
   for (Version* v = dummy_versions_.next_; v != &dummy_versions_;
        v = v->next_) {
-    for (int level = 0; level < config::kNumLevels; level++) {
+    for(int level=0; level < 2; level++) {
+      const std::vector<FileMetaData*>& files = v->files_[level];
+      for(size_t i=0; i < files.size(); i++) {
+        for(int seg_idx=0; seg_idx < files[i]->segments.size(); seg_idx++) {
+          live->insert(files[i]->segments[seg_idx]->file_number);
+        }
+      }
+    }
+    for (int level = 2; level < config::kNumLevels; level++) {
       const std::vector<FileMetaData*>& files = v->files_[level];
       for (size_t i = 0; i < files.size(); i++) {
-        live->insert(files[i]->number);
+        // for(size_t j = 0; j < files[i]->segments.size(); j++) {
+          // live->insert(files[i]->segments[j].file_number);
+          live->insert(files[i]->number);
+        // }
       }
     }
   }
 }
+
 
 int64_t VersionSet::NumLevelBytes(int level) const {
   assert(level >= 0);
@@ -1191,9 +1317,12 @@ void VersionSet::GetRange(const std::vector<FileMetaData*>& inputs,
   smallest->Clear();
   largest->Clear();
   for (size_t i = 0; i < inputs.size(); i++) {
+    // FileMetaData* f = inputs[i];
     FileMetaData* f = inputs[i];
     if (i == 0) {
+      // *smallest = f->smallest;
       *smallest = f->smallest;
+      // *largest = f->largest;
       *largest = f->largest;
     } else {
       if (icmp_.Compare(f->smallest, *smallest) < 0) {
@@ -1230,12 +1359,22 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
   int num = 0;
   for (int which = 0; which < 2; which++) {
     if (!c->inputs_[which].empty()) {
+      assert(c->level() + which > 0);
       if (c->level() + which == 0) {
         const std::vector<FileMetaData*>& files = c->inputs_[which];
         for (size_t i = 0; i < files.size(); i++) {
-          list[num++] = table_cache_->NewIterator(options, files[i]->number,
-                                                  files[i]->file_size);
+          // list[num++] = table_cache_->NewIterator(options, files[i]->number,
+                                                  // files[i]->file_size);
+          list[num++] = table_cache_nvm_->NewIterator(options, files[i], nullptr);
         }
+      } else if(c->level() == 1 && which == 0) {
+        TableCacheNVMAndInputs* cache_inputs = new TableCacheNVMAndInputs;
+        cache_inputs->inputs = &c->inputs_[which];
+        cache_inputs->table_cache = table_cache_nvm_;
+        Iterator* iter = NewTwoLevelIterator(
+          new Version::InputsIndexIterator(icmp_, &c->inputs_[which]), &GetTableIterator, cache_inputs, options);
+        iter->RegisterCleanup(CleanupDeleteCacheAndInputs, cache_inputs, nullptr);
+        list[num++] = iter;
       } else {
         // Create concatenating iterator for the files from this level
         list[num++] = NewTwoLevelIterator(
@@ -1258,65 +1397,21 @@ Compaction* VersionSet::PickCompaction() {
   // the compactions triggered by seeks.
   const bool size_compaction = (current_->compaction_score_ >= 1);
   const bool seek_compaction = (current_->file_to_compact_ != nullptr);
-  // how about we alway pick the table with max_table_size
-  // for split compaction. this make sense.
-  // we could traverse the tabe metadata here to find the 
-  // table with max filesize or we could sotre it after each version changed.
-  const bool split_compaction = (current_->max_tabe_size >= options_->max_nvm_table_size);
-  
-  // if all table size exceeds limit and the number of tables in the level reach 
-  // the limit, then we will do size_compaction.
 
-
-  // FileMetaData* first_f = nullptr;
-  // FileMetaData* compact_pointer_f = nullptr;
-  // if(split_compaction) {
-  //   int num_over_size = 0;
-  //   level = current_->compaction_level_;
-  //   // there maybe multiple table that exceeds table size.
-  //   // which one will we pick
-  //   for(size_t i=0; i < current_->files_[level].size(); i++) {
-
-  //     FileMetaData* f = current_->files_[level][i];
-      
-  //     if(f->raw_data_size > TableSizeLimit) {
-  //       num_over_size++;
-  //       if(first_f == nullptr) {
-  //         first_f = f;
-  //       }
-  //       if(compact_pointer_[level].empty() || icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
-  //         if(compact_pointer_f == nullptr) {
-  //           compact_pointer_f = f;
-  //         }
-  //         // c->inputs_[0].push_back(f);
-  //         // break;
-  //       }
-  //     } 
-  //   }
-
-  //   // nonsense, if it is required that all tables exceeds limits 
-  //   // before doing size compaciton, then one small size table
-  //   // will keep size compaction happening, which means there may be too many tables
-  //   // in the same level.  
-  //   // So what do we do?
-  //   // We still put size compaction as first priority.
-  //   // and then put split compaction as second priority.
-  //   if(num_over_size >= TableLeveLimit) {
-  //     split_compaction = false;
-  //   }
-
-  // }
-  
 
   if (size_compaction) {
     level = current_->compaction_level_;
     assert(level >= 0);
     assert(level + 1 < config::kNumLevels);
+    std::string msg = "compaction level is: " + std::to_string(level);
+    Log(options_->info_log, msg.data());
     c = new Compaction(options_, level);
 
     // Pick the first file that comes after compact_pointer_[level]
     for (size_t i = 0; i < current_->files_[level].size(); i++) {
       FileMetaData* f = current_->files_[level][i];
+      // SSTableMeta* f = current_->files_[level][i];
+      // SSTableMeta* t = current_->tables_[level][i];
       if (compact_pointer_[level].empty() ||
           icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
         c->inputs_[0].push_back(f);
@@ -1327,7 +1422,37 @@ Compaction* VersionSet::PickCompaction() {
       // Wrap-around to the beginning of the key space
       c->inputs_[0].push_back(current_->files_[level][0]);
     }
-  } else if(split_compaction) {
+  }  else if (seek_compaction) {
+    level = current_->file_to_compact_level_;
+    c = new Compaction(options_, level);
+    c->inputs_[0].push_back(current_->file_to_compact_);
+  } else {
+    return nullptr;
+  }
+
+  c->input_version_ = current_;
+  c->input_version_->Ref();
+
+  // Files in level 0 may overlap each other, so pick up all overlapping ones
+  if (level == 0) {
+    InternalKey smallest, largest;
+    GetRange(c->inputs_[0], &smallest, &largest);
+    // Note that the next call will discard the file we placed in
+    // c->inputs_[0] earlier and replace it with an overlapping set
+    // which will include the picked file.
+    current_->GetOverlappingInputs(0, &smallest, &largest, &c->inputs_[0]);
+    assert(!c->inputs_[0].empty());
+  }
+
+  SetupOtherInputs(c);
+  
+
+  return c;
+}
+
+
+  /*
+else if(split_compaction) {
     // we can pick multiple tables for split compaciton.
     // this seems ok 
     // but we can't pick too many tables at the same time.
@@ -1379,34 +1504,8 @@ Compaction* VersionSet::PickCompaction() {
     //   assert(first_f != nullptr);
     //   c->inputs_[0].push_back(first_f);
     // }
-  } else if (seek_compaction) {
-    level = current_->file_to_compact_level_;
-    c = new Compaction(options_, level);
-    c->inputs_[0].push_back(current_->file_to_compact_);
-  } else {
-    return nullptr;
   }
-
-  c->input_version_ = current_;
-  c->input_version_->Ref();
-
-  // Files in level 0 may overlap each other, so pick up all overlapping ones
-  if (level == 0) {
-    InternalKey smallest, largest;
-    GetRange(c->inputs_[0], &smallest, &largest);
-    // Note that the next call will discard the file we placed in
-    // c->inputs_[0] earlier and replace it with an overlapping set
-    // which will include the picked file.
-    current_->GetOverlappingInputs(0, &smallest, &largest, &c->inputs_[0]);
-    assert(!c->inputs_[0].empty());
-  }
-
-  if(!split_compaction) {
-    SetupOtherInputs(c);
-  }
-
-  return c;
-}
+  */
 
 // Finds the largest key in a vector of files. Returns true if files it not
 // empty.
@@ -1486,6 +1585,284 @@ void AddBoundaryInputs(const InternalKeyComparator& icmp,
     }
   }
 }
+
+// create TableIntervals from input for new segments to be appended to 
+void VersionSet::SetupTableIntervals(std::vector<TableInterval*>& tmp_intervals, const std::vector<FileMetaData*> &input ) {
+  for(int i=0; i< input.size(); i++) {
+    InternalKey* left1 = nullptr;
+    InternalKey *right1= nullptr;
+    InternalKey* left2 = nullptr;
+    InternalKey* right2 = nullptr;
+    if(i != 0) {
+      // left = new InternalKey(tmp_intervals.back().right_bound);
+      left1 = new InternalKey();
+      left1->DecodeFrom(tmp_intervals.back()->right_bound->Encode());
+    }
+
+    right1 = new InternalKey();
+    right1->DecodeFrom(input[i]->smallest.Encode()); 
+
+    left2 = new InternalKey();
+    left2->DecodeFrom(input[i]->smallest.Encode());
+
+    right2 = new InternalKey();
+    right2->DecodeFrom(input[i]->largest.Encode());
+    // tmp_intervals.push_back(TableInterval{true, left1, right1 });
+    // tmp_intervals.push_back(TableInterval(false, left2, right2, input[i]->number));
+    tmp_intervals.push_back(new TableInterval(left1, right1));
+    tmp_intervals.push_back(new TableInterval(left2, right2, left2, right2));
+    // segment->ref++?
+    tmp_intervals.back()->segments = (input[i]->segments);
+    tmp_intervals.back()->total_size = input[i]->file_size;
+  }
+  InternalKey * left=  new InternalKey();
+  left->DecodeFrom(input.back()->largest.Encode());
+  tmp_intervals.push_back(new TableInterval( left, nullptr ));
+}
+
+// the compaction must happen at level1 
+Status VersionSet::MakeNewFiles(Compaction* compact, std::vector<LevelOutput>& res,port::Mutex* mu) {
+  assert(compact->level() == 0);
+  // res must be ordered.
+  std::vector<TableInterval*> tmp_intervals;
+
+  // compact->inputs_[1] maybe empty
+  // so in this case, we will just add inputs_[0] to the final LevelOutput, and that's it.
+  
+  // segments with bigger should be at the front or at the back
+  // for each segment of each SSTable in level i
+  // we will try to split the file 
+  std::vector<FileMetaData*> inputs0 = compact->inputs_[0];
+  if(compact->level() == 0) {
+    sort(inputs0.begin(), inputs0.end(), NewestFirst);
+  }
+  std::vector<FileMetaData*> inputs1 = (compact->inputs_[1]);
+
+
+  // todo: 
+  // if the size of inputs1 < preset Table limit
+  // then we will double that table interval to add more internvals
+  // else we will not add any new intervals and just append new segments to 
+  // the original ones.
+  if(inputs1.empty()) {
+    FileMetaData* inputs0_oldest = inputs0.back();
+    inputs0.pop_back();
+    inputs1.push_back(inputs0_oldest);
+
+  } 
+
+
+  SetupTableIntervals(tmp_intervals, inputs1  );
+  
+  // it's possible there may no be overlapping sstables in level i+1
+  // so now what do we do?
+  // we need to insert new sstables meta to files_[level i+1]
+  // [1-10][][10-15][17-30]
+
+  // or [1-10]<10-20>[20-50]<50-60>[60-80]
+
+  // there is optimizaiton we can do, but for now,
+  // I just pick the simplest solution 
+  for(int i= inputs0.size()-1 ; i >= 0; i--) {
+    assert(inputs0[i]->segments.size() == 1);
+    const SegmentMeta* seg = inputs0[i]->segments[0];
+    std::vector<Iterator*> seg_iters = table_cache_nvm_->NewIndexIterator(inputs0[i]);
+    assert(seg_iters.size()==1);
+    SplitFileForInputs(seg, seg_iters[0], tmp_intervals, mu);
+    
+    for(int j=0; j < seg_iters.size(); j++) {
+      delete seg_iters[j];
+    }
+  }
+
+  for(int i=0; i < tmp_intervals.size(); i++) {
+    if(tmp_intervals[i]->segments.size() > 0) {
+      if(!res.empty()) {
+        assert(icmp_.Compare(*(tmp_intervals[i]->real_left_bound), res.back().largest) > 0);
+      }
+
+      if(!tmp_intervals[i]->segments.empty()){
+        mu->Lock();
+        uint64_t new_file_number = NewFileNumber();
+        mu->Unlock();
+        res.push_back(LevelOutput(new_file_number, tmp_intervals[i]->total_size, *(tmp_intervals[i]->real_left_bound), *(tmp_intervals[i]->real_right_bound), tmp_intervals[i]->segments));
+      } 
+    }
+  }
+  for(int i=0; i < tmp_intervals.size(); i++) {
+    delete tmp_intervals[i];
+  }
+  return Status::OK();
+
+}
+
+int FindTableInterval(const InternalKeyComparator& icmp,
+                      const std::vector<TableInterval*>& intervals, const Slice& key) {
+  uint32_t left = 0;
+  uint32_t right = intervals.size();
+  while(left < right) {
+    uint32_t mid = (left + right) / 2;
+    const TableInterval* interval = intervals[mid];
+    
+    if(interval->right_bound != nullptr && icmp.Compare(interval->right_bound->Encode(), key) < 0) {
+      left = mid + 1;
+    } else {
+      right = mid;
+    }
+  }
+
+  return right;
+}
+
+static bool BeforeInterval(const InternalKeyComparator& icmp, const Slice& user_key,
+                            const TableInterval* interval) {
+  return ( (interval->left_bound != nullptr && icmp.Compare(user_key, (interval->left_bound->Encode())) < 0));
+}
+
+Status VersionSet::DecodeMetaVals(Slice& val, uint64_t *key_offset, uint64_t *key_data_offset) {
+
+  *key_offset = DecodeFixed64(val.data()); 
+  *key_data_offset = DecodeFixed64(val.data()+8) ;  
+
+  return Status::OK();
+}
+
+// how to open a table ?
+// I think we should pass table_cache_ to this function.
+// anyway I just want it to be quick.
+// we should unlock mutex during file reading 
+Status VersionSet::SplitFileForInputs(const SegmentMeta* seg, Iterator* seg_key_iter, std::vector<TableInterval*>& base_files, port::Mutex* mu) {
+  // first we need to locate the first file that has overlapping with seg 
+  // then from the first overlapping file we start splitting the segments
+  // until we get to the end of the segment 
+  // while we are splitting the segment,we should append that split part to the base_files.
+  
+  size_t first_overlap_file_idx = FindTableInterval(icmp_, base_files, seg->smallest.Encode());
+
+  assert(first_overlap_file_idx < base_files.size());
+  assert(!BeforeInterval(icmp_, seg->largest.Encode(), base_files[first_overlap_file_idx]));
+
+  // how about using an iterator
+  uint64_t prev_data_start = seg->data_offset;
+  uint64_t prev_key_start = seg->key_offset;
+  // this assert is true because we are only split segments from level0
+  assert(prev_data_start == 0);
+  InternalKey prev_key;
+  uint64_t base_files_idx = first_overlap_file_idx;
+
+  // we can iterate through the index key part instead of the data part. 
+  seg_key_iter->SeekToFirst();
+  if(!prev_key.DecodeFrom(seg_key_iter->key())) {
+    return Status::Corruption("prev key decode failed");
+  }
+  while(seg_key_iter->Valid() && base_files_idx < base_files.size()) {
+    bool end = false;
+    if(base_files_idx == base_files.size()-1) {
+      seg_key_iter->SeekToLast();
+      end = true;
+    } else {
+      seg_key_iter->Seek(base_files[base_files_idx]->right_bound->Encode());
+    }
+    // what if the right bound key is too large that iter->valid() is not true, 
+    // so in this case , we will just call iter->seektoLast() and push the segment 
+    // and then call iter->next() to set iter invalid;
+    if(!seg_key_iter->Valid()) {
+      seg_key_iter->SeekToLast();
+      end = true;
+    }
+    InternalKey cur_key;
+    cur_key.DecodeFrom(seg_key_iter->key()) ;   
+   
+    // value format: key_offset, offset_in_data_part 
+    Slice val = seg_key_iter->value();
+    uint64_t cur_key_offset; 
+    uint64_t key_data_offset;
+    if(end) {
+      cur_key_offset = seg->seg_size;
+      key_data_offset = seg->data_size;
+    } else {
+      Status s = DecodeMetaVals(val, &cur_key_offset, &key_data_offset);
+    }
+
+    if(cur_key_offset > prev_key_start || end) {
+      uint64_t cur_key_size = cur_key_offset - prev_key_start;
+      uint64_t cur_key_data_size = key_data_offset - prev_data_start;
+
+      InternalKey seg_largest_key;
+      if(!end) {
+        seg_key_iter->Prev();
+      }
+      assert(seg_key_iter->Valid());
+      seg_largest_key.DecodeFrom(seg_key_iter->key());
+      seg_key_iter->Next();
+
+      mu->Lock();
+      uint64_t new_seg_num = NewSegNumber();
+      mu->Unlock();
+      SegmentMeta* seg_meta = new SegmentMeta(prev_data_start, cur_key_data_size, prev_key_start, cur_key_size, seg->file_number, new_seg_num, prev_key, seg_largest_key);
+   
+      base_files[base_files_idx]->segments.push_back(seg_meta);
+      base_files[base_files_idx]->total_size += seg_meta->seg_size;
+
+      // ToDo:: we need to update interval boundary !!!!
+      // InternalKey* base_smallest = base_files[base_files_idx]->real_left_bound;
+      InternalKey* &base_smallest = base_files[base_files_idx]->real_left_bound;
+      if(base_smallest == nullptr|| icmp_.Compare(prev_key, *base_smallest) < 0) {
+        if(base_smallest == nullptr) {
+          base_smallest = new InternalKey();
+        }
+        base_smallest->DecodeFrom(prev_key.Encode());
+      }
+
+      InternalKey* &base_file_largest = base_files[base_files_idx]->real_right_bound;
+      if(base_file_largest == nullptr|| icmp_.Compare(*base_file_largest, seg_largest_key) < 0) {
+        if(base_file_largest == nullptr) {
+          base_file_largest = new InternalKey();
+        }
+        base_file_largest->DecodeFrom(seg_largest_key.Encode());
+      }
+    } 
+
+    prev_key = cur_key;
+    prev_data_start = key_data_offset;
+    prev_key_start = cur_key_offset;
+
+    base_files_idx++;
+  }
+  
+  // have some elements left in the segment 
+  // that is to  be appended to the last tableInterval
+
+  // if(seg_key_iter->Valid() ) {
+  //   seg_key_iter->SeekToLast();
+  //   uint64_t cur_key_offset;
+  //   uint64_t key_data_offset;
+  //   InternalKey cur_key;
+  //   cur_key.DecodeFrom(seg_key_iter->key());
+  //   Slice meta_val = seg_key_iter->value();
+  //   Status s = DecodeMetaVals(meta_val, &cur_key_offset, &key_data_offset);
+  //   if(!s.ok()) {
+  //     return s;
+  //   }
+
+  //   uint64_t cur_key_size = cur_key_offset - prev_key_start;
+  //   uint64_t cur_key_data_size = key_data_offset - prev_data_start;
+
+  //   assert(base_files_idx == base_files.size()-1);
+  //   // base_files[base_files_idx].segments.push_back(SegmentMeta{prev_data_start, cur_key_data_size, prev_key_start,
+  //   //                                                           cur_key_data_size, seg.file_number, prev_key, cur_key});  
+
+  //   seg_key_iter->Next();
+  //   // assert(seg_key_iter->Valid());
+  // }
+
+  assert(!seg_key_iter->Valid());
+ 
+  return Status::OK();
+
+  // that's it.
+}
+
 
 void VersionSet::SetupOtherInputs(Compaction* c) {
   const int level = c->level();
@@ -1607,7 +1984,8 @@ bool Compaction::IsTrivialMove() const {
   // Avoid a move if there is lots of overlapping grandparent data.
   // Otherwise, the move could create a parent file that will require
   // a very expensive merge later on.
-  return (num_input_files(0) == 1 && num_input_files(1) == 0 &&
+  // return (num_input_files(0) == 1 && num_input_files(1) == 0 &&
+  return ( num_input_files(0) == 1 && num_input_files(1) == 0 && (level_ == 0 || level_ > 1) &&
           TotalFileSize(grandparents_) <=
               MaxGrandParentOverlapBytes(vset->options_));
 }

@@ -11,6 +11,7 @@
 #include "db/dbformat.h"
 #include "db/memtable.h"
 #include "db/write_batch_internal.h"
+#include "db/version_edit.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "leveldb/iterator.h"
@@ -20,6 +21,8 @@
 #include "table/format.h"
 #include "util/random.h"
 #include "util/testutil.h"
+#include "table_nvm/table_builder_nvm.h"
+#include "table_nvm/table_nvm.h"
 
 namespace leveldb {
 
@@ -207,6 +210,63 @@ class BlockConstructor : public Constructor {
   BlockConstructor();
 };
 
+class TableNVMConstructor: public Constructor {
+public:
+  TableNVMConstructor(const Comparator* cmp)
+      :Constructor(cmp) {}
+  ~TableNVMConstructor() override {
+    delete seg_;
+    seg_ = nullptr;
+
+    delete table_;
+    table_ = nullptr;
+    delete source_;
+  }
+
+  Status FinishImpl(const Options& options, const KVMap& data) override {
+    // Reset();
+    StringSink sink;
+    TableBuilderNVM* builder = new TableBuilderNVMSplit(options );
+    
+    for(const auto& kvp: data) {
+      builder->Add(kvp.first, kvp.second) ;  
+      EXPECT_LEVELDB_OK(builder->status());
+    }
+    Status s = builder->Finish(&sink);
+    EXPECT_LEVELDB_OK(s);
+    
+    EXPECT_EQ(sink.contents().size(), builder->FileSize());
+    // SegmentMeta seg_meta ( uint64_t(0), builder->RawDataSize(), builder->RawDataSize(), 
+                            // builder->MetaDataSize(), 0, 0, "", "" ) ;
+    // seg_meta_ = seg_meta;
+    // data_source_ = new StringSource(builder->Data());
+    // key_source_ = new StringSource(builder->KeyData());
+    source_ = new StringSource(sink.contents());
+    s = Segment::Open(options, source_, 0, builder->RawDataSize(), builder->RawDataSize(), builder->MetaDataSize(), &seg_) ;                       
+    if(!s.ok()) {
+      return s;
+    } 
+    
+    // TableNVM* table = nullptr;
+    std::vector<Segment*> segs;
+    segs.push_back(seg_);
+    s = TableNVM::Open(options, segs, &table_);
+    return s;
+
+  }
+
+  Iterator* NewIterator() const override {
+    return table_->NewIterator(ReadOptions());
+  }
+
+    Segment* seg_;
+  private:
+    TableNVM* table_;
+    StringSource *source_;
+    // StringSource* data_source_;
+    // StringSource* key_source_;
+};
+
 class TableConstructor : public Constructor {
  public:
   TableConstructor(const Comparator* cmp)
@@ -236,7 +296,6 @@ class TableConstructor : public Constructor {
   Iterator* NewIterator() const override {
     return table_->NewIterator(ReadOptions());
   }
-
   uint64_t ApproximateOffsetOf(const Slice& key) const {
     return table_->ApproximateOffsetOf(key);
   }
@@ -340,7 +399,8 @@ class DBConstructor : public Constructor {
     for (const auto& kvp : data) {
       WriteBatch batch;
       batch.Put(kvp.first, kvp.second);
-      EXPECT_TRUE(db_->Write(WriteOptions(), &batch).ok());
+      Status s = db_->Write(WriteOptions(), &batch);
+      EXPECT_TRUE(s.ok());
     }
     return Status::OK();
   }
@@ -370,7 +430,7 @@ class DBConstructor : public Constructor {
   DB* db_;
 };
 
-enum TestType { TABLE_TEST, BLOCK_TEST, MEMTABLE_TEST, DB_TEST };
+enum TestType { TABLE_TEST, BLOCK_TEST, MEMTABLE_TEST, DB_TEST , TABLE_NVM_TEST};
 
 struct TestArgs {
   TestType type;
@@ -379,6 +439,7 @@ struct TestArgs {
 };
 
 static const TestArgs kTestArgList[] = {
+
     {TABLE_TEST, false, 16},
     {TABLE_TEST, false, 1},
     {TABLE_TEST, false, 1024},
@@ -401,6 +462,11 @@ static const TestArgs kTestArgList[] = {
     {DB_TEST, false, 16},
     {DB_TEST, true, 16},
 };
+
+static const TestArgs myArgs[] = {
+  {TABLE_NVM_TEST, 1},
+};
+
 static const int kNumTestArgs = sizeof(kTestArgList) / sizeof(kTestArgList[0]);
 
 class Harness : public testing::Test {
@@ -432,6 +498,9 @@ class Harness : public testing::Test {
       case DB_TEST:
         constructor_ = new DBConstructor(options_.comparator);
         break;
+      case TABLE_NVM_TEST:
+        constructor_ = new TableNVMConstructor(options_.comparator);
+        break;
     }
   }
 
@@ -451,15 +520,50 @@ class Harness : public testing::Test {
     TestRandomAccess(rnd, keys, data);
   }
 
+  void MyTest(Random* rnd) {
+    std::vector<std::string> keys;
+    KVMap data;
+    constructor_->Finish(options_, &keys, &data);
+
+    TestForwardScan(keys, data);
+    TestRandomAccess(rnd, keys, data);
+  }
+  
+  void TestGet() {
+    std::vector<std::string> keys;
+    KVMap data;
+    Add("B1", "a");
+    Add("D", "b");
+    constructor_->Finish(options_, &keys, &data);
+    Iterator* iter = constructor_->NewIterator();
+    TableNVMConstructor* cons = reinterpret_cast<TableNVMConstructor*>(constructor_);
+
+    Iterator* iter2 = cons->seg_->NewIndexIterator(ReadOptions()); 
+    iter->Seek("B2");
+    ASSERT_EQ(iter->key(), "D");
+    delete iter;
+    iter2->Seek("B2");
+    ASSERT_EQ(iter2->key().ToString(), "D");
+    delete iter2;
+
+  }
+
   void TestForwardScan(const std::vector<std::string>& keys,
                        const KVMap& data) {
     Iterator* iter = constructor_->NewIterator();
     ASSERT_TRUE(!iter->Valid());
     iter->SeekToFirst();
+    int count = 0;
     for (KVMap::const_iterator model_iter = data.begin();
          model_iter != data.end(); ++model_iter) {
-      ASSERT_EQ(ToString(data, model_iter), ToString(iter));
+      std::string data_str = ToString(data, model_iter);
+      std::string iter_str = ToString(iter);
+      if(data_str != iter_str) {
+        printf("%s != %s", data_str, iter_str);
+      }
+      ASSERT_EQ(data_str, iter_str);
       iter->Next();
+      count++;
     }
     ASSERT_TRUE(!iter->Valid());
     delete iter;
@@ -697,6 +801,40 @@ TEST_F(Harness, Randomized) {
   }
 }
 
+TEST_F(Harness, TableNVMIterate) {
+
+  Random rnd(test::RandomSeed() + 5);
+  Init(myArgs[0]);
+  for(int num_entries=0; num_entries < 200; num_entries++) {
+    std::string v;
+    std::string key = test::RandomKey(&rnd, rnd.Skewed(4));
+    if(key.length() == 0 ) {
+      // std::fprintf(stderr, "length of key is 0\n");
+    }
+    Add(key, test::RandomString(&rnd, rnd.Skewed(5), &v).ToString());
+  }
+
+  MyTest(&rnd);
+}
+
+TEST_F(Harness, TableNVMGet) {
+  Init(myArgs[0]);
+  TestGet();
+}
+// TEST_F(Harness, TableNVMGet) {
+//   Init(myArgs[0]);
+//   Random rnd(test::RandomSeed() +5);
+//   Add("B1", test::RandomString(&rnd, rnd.Skewed(5), &v).ToString());
+//   std::vector<std::string> keys;
+//   KVMap data;
+  
+// }
+
+
+// TEST_F(Harness, MakeNewFiles) {
+  
+// }
+
 TEST_F(Harness, RandomizedLongDB) {
   Random rnd(test::RandomSeed());
   TestArgs args = {DB_TEST, false, 16};
@@ -720,6 +858,8 @@ TEST_F(Harness, RandomizedLongDB) {
   }
   ASSERT_GT(files, 0);
 }
+
+
 
 TEST(MemTableTest, Simple) {
   InternalKeyComparator cmp(BytewiseComparator());
@@ -825,6 +965,8 @@ TEST(TableTest, ApproximateOffsetOfCompressed) {
   // Have now emitted two large compressible strings, so adjust expected offset.
   ASSERT_TRUE(Between(c.ApproximateOffsetOf("xyz"), 2 * min_z, 2 * max_z));
 }
+
+
 
 }  // namespace leveldb
 

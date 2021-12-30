@@ -30,6 +30,8 @@ static const int kL0_CompactionTrigger = 4;
 // Soft limit on number of level-0 files.  We slow down writes at this point.
 static const int kL0_SlowdownWritesTrigger = 8;
 
+static const int kL1TableSizeLimit = 10;
+
 // Maximum number of level-0 files.  We stop writes at this point.
 static const int kL0_StopWritesTrigger = 12;
 
@@ -39,7 +41,7 @@ static const int kL0_StopWritesTrigger = 12;
 // expensive manifest file operations.  We do not push all the way to
 // the largest level since that can generate a lot of wasted disk
 // space if the same key space is being repeatedly overwritten.
-static const int kMaxMemCompactLevel = 2;
+static const int kMaxMemCompactLevel = 1;
 
 // Approximate gap in bytes between samples of data read during iteration.
 static const int kReadBytesPeriod = 1048576;

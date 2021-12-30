@@ -253,6 +253,12 @@ class InMemoryEnv : public EnvWrapper {
     return Status::OK();
   }
 
+  Status NewRandomAccessFile2(const std::string& fname,
+                              RandomAccessFile** result) override { return Status::OK(); }
+  
+
+  Status NewFixedSizeWritableFile(const std::string& filename,
+                                  WritableFile** result, uint64_t size) override { return Status::OK(); } 
   Status NewWritableFile(const std::string& fname,
                          WritableFile** result) override {
     MutexLock lock(&mutex_);

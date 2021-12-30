@@ -731,10 +731,14 @@ TEST_F(DBTest, GetPicksCorrectFile) {
     ASSERT_LEVELDB_OK(Put("f", "vf"));
     Compact("f", "g");
     ASSERT_EQ("va", Get("a"));
-    ASSERT_EQ("vf", Get("f"));
     ASSERT_EQ("vx", Get("x"));
+    ASSERT_EQ("vf", Get("f"));
   } while (ChangeOptions());
 }
+
+// TEST_F(DBTest, IterLevel0) {
+
+// }
 
 TEST_F(DBTest, GetEncountersEmptyLevel) {
   do {
@@ -748,7 +752,7 @@ TEST_F(DBTest, GetEncountersEmptyLevel) {
 
     // Step 1: First place sstables in levels 0 and 2
     int compaction_count = 0;
-    while (NumTableFilesAtLevel(0) == 0 || NumTableFilesAtLevel(2) == 0) {
+    while (NumTableFilesAtLevel(0) == 0 || NumTableFilesAtLevel(1) == 0) {
       ASSERT_LE(compaction_count, 100) << "could not fill levels 0 and 2";
       compaction_count++;
       Put("a", "begin");
@@ -1144,6 +1148,64 @@ TEST_F(DBTest, RepeatedWritesToSameKey) {
   }
 }
 
+TEST_F(DBTest, MakeNewFilesOnlyOneL0File) {
+  Options options = CurrentOptions();
+  options.compression = kNoCompression;
+
+  Put("A", "va");
+  Put("B", "vb");
+
+  dbfull()->TEST_CompactMemTable();
+  dbfull()->TEST_CompactRange(1, nullptr, nullptr) ;
+  ASSERT_EQ(NumTableFilesAtLevel(1),  0) ;
+  ASSERT_EQ(NumTableFilesAtLevel(2), 1  ) ;
+
+}
+
+TEST_F(DBTest, MakeNewFilesTwoL0File) {
+  Options options = CurrentOptions();
+
+  Put("A", "va");
+  Put("B2", "vb");
+  dbfull()->TEST_CompactMemTable();
+  Put("B1", "vb1");
+  Put("D", "vd");
+  dbfull()->TEST_CompactMemTable();
+  dbfull()->TEST_CompactRange(0, nullptr, nullptr);
+  ASSERT_EQ(NumTableFilesAtLevel(0), 0);
+  ASSERT_EQ(NumTableFilesAtLevel(1), 2);
+
+}
+
+TEST_F(DBTest, MakeNewFilesL0andL1) {
+  // todo: add more keys to one sstable
+  Options options = CurrentOptions();
+  options.compression = kNoCompression;
+  Put("A", "va");
+  Put("B2", "vb");
+  dbfull()->TEST_CompactMemTable();
+  // dbfull()->TEST_CompactRange(0, nullptr, nullptr);
+  Put("B1", "vb1");
+  Put("D", "vd");
+  dbfull()->TEST_CompactMemTable();
+  dbfull()->TEST_CompactRange(0, nullptr, nullptr);
+
+  ASSERT_EQ(NumTableFilesAtLevel(0), 0);
+  ASSERT_EQ(NumTableFilesAtLevel(1), 2);
+  
+  ASSERT_EQ(Get("A"), "va");
+  ASSERT_EQ(Get("B1"), "vb1");
+  dbfull()->TEST_CompactRange(1, nullptr, nullptr);
+  ASSERT_EQ(NumTableFilesAtLevel(1), 0);
+  ASSERT_TRUE(NumTableFilesAtLevel(2) > 0 );
+  ASSERT_EQ(Get("A"), "va");
+  ASSERT_EQ(Get("B1"), "vb1");
+}
+
+
+TEST_F(DBTest, MakeNewFilesSameKey) {
+  
+}
 TEST_F(DBTest, SparseMerge) {
   Options options = CurrentOptions();
   options.compression = kNoCompression;
@@ -2324,7 +2386,7 @@ static void BM_LogAndApply(benchmark::State& state) {
 
   InternalKeyComparator cmp(BytewiseComparator());
   Options options;
-  VersionSet vset(dbname, &options, nullptr, &cmp);
+  VersionSet vset(dbname, &options, nullptr, nullptr, &cmp);
   bool save_manifest;
   ASSERT_LEVELDB_OK(vset.Recover(&save_manifest));
   VersionEdit vbase;
@@ -2361,6 +2423,6 @@ BENCHMARK(BM_LogAndApply)->Arg(1)->Arg(100)->Arg(10000)->Arg(100000);
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  benchmark::RunSpecifiedBenchmarks();
+  // benchmark::RunSpecifiedBenchmarks();
   return RUN_ALL_TESTS();
 }

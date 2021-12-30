@@ -15,8 +15,10 @@
 #ifndef STORAGE_LEVELDB_DB_VERSION_SET_H_
 #define STORAGE_LEVELDB_DB_VERSION_SET_H_
 
+#include <memory>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <vector>
 
 #include "db/dbformat.h"
@@ -38,6 +40,7 @@ class TableCache;
 class Version;
 class VersionSet;
 class WritableFile;
+class TableCacheNVM;
 
 // Return the smallest index i such that files[i]->largest >= key.
 // Return files.size() if there is no such file.
@@ -110,6 +113,7 @@ class Version {
                                  const Slice& largest_user_key);
 
   int NumFiles(int level) const { return files_[level].size(); }
+  // int NumTables(int level) const {return tables_[level].size();}
 
   // Return a human readable string that describes this version's contents.
   std::string DebugString() const;
@@ -119,6 +123,7 @@ class Version {
   friend class VersionSet;
 
   class LevelFileNumIterator;
+  class InputsIndexIterator;
 
   explicit Version(VersionSet* vset)
       : vset_(vset),
@@ -136,12 +141,15 @@ class Version {
   ~Version();
 
   Iterator* NewConcatenatingIterator(const ReadOptions&, int level) const;
+  Iterator* NewConcatIteratorNVM(const ReadOptions&, int level) const;
 
   // Call func(arg, level, f) for every file that overlaps user_key in
   // order from newest to oldest.  If an invocation of func returns
   // false, makes no more calls.
   //
   // REQUIRES: user portion of internal_key == user_key.
+  // void ForEachOverlapping(Slice user_key, Slice internal_key, void* arg,
+  //                         bool (*func)(void*, int, FileMetaData*));
   void ForEachOverlapping(Slice user_key, Slice internal_key, void* arg,
                           bool (*func)(void*, int, FileMetaData*));
 
@@ -152,8 +160,12 @@ class Version {
 
   // List of files per level
   std::vector<FileMetaData*> files_[config::kNumLevels];
+  // std::vector<FileMetaData*> tables_[config::kNumLevels];
+
+  std::unordered_set<uint64_t> live_files_set;
 
   // Next file to compact based on seek stats.
+  // FileMetaData* file_to_compact_;
   FileMetaData* file_to_compact_;
   int file_to_compact_level_;
 
@@ -164,10 +176,85 @@ class Version {
   int compaction_level_;
 };
 
+struct LevelOutput{
+  // bool is_new;
+  LevelOutput(uint64_t num, uint64_t f_size, InternalKey& small, InternalKey& large, std::vector<SegmentMeta*>& new_segs) 
+    : number(num),
+      file_size(f_size),
+      new_segments(std::move(new_segs)) {
+    smallest.DecodeFrom(small.Encode());
+    largest.DecodeFrom(large.Encode());
+  }
+  // uint64_t orig_number;
+  uint64_t number;
+  uint64_t file_size; // virtual sstable size
+  InternalKey smallest;
+  InternalKey largest;
+  std::vector<SegmentMeta*> new_segments;
+};
+
+
+// (], (], ... , (]
+struct TableInterval {
+  TableInterval(InternalKey* left, InternalKey* right,
+       InternalKey *real_left=nullptr,
+       InternalKey *real_right=nullptr) 
+      :left_bound(left),
+      right_bound(right),
+      total_size(0) {
+    real_left_bound = nullptr;
+    real_right_bound = nullptr;
+
+    if(real_left != nullptr) {
+      real_left_bound = new InternalKey();
+      real_left_bound->DecodeFrom(real_left->Encode());
+    }
+    if(real_right != nullptr) {
+      real_right_bound = new InternalKey();
+      real_right_bound->DecodeFrom(real_right->Encode());
+    }
+  }
+  ~TableInterval() {
+    if(left_bound != nullptr) {
+      delete left_bound;
+
+    }
+    if(right_bound != nullptr) {
+      delete right_bound;
+    }
+    if(real_left_bound != nullptr) {
+      delete real_left_bound;
+    }
+    if(real_right_bound != nullptr) {
+      delete real_right_bound;
+    }
+  }
+
+  // bool new_interval;
+  // uint64_t orig_number;   // only valid when new_interval is false;
+  InternalKey *left_bound; // not included
+  InternalKey *right_bound; // included in the range
+
+  InternalKey *real_left_bound;
+  // std::shared_ptr<InternalKey> real_left_bound;
+  InternalKey *real_right_bound;
+  // std::shared_ptr<InternalKey> real_right_bound;
+
+  std::vector<SegmentMeta*> segments;
+  uint64_t total_size;
+
+
+};
+
+struct TableCacheNVMAndInputs {
+  TableCacheNVM* table_cache;
+  const std::vector<FileMetaData*> *inputs;
+};
+
 class VersionSet {
  public:
   VersionSet(const std::string& dbname, const Options* options,
-             TableCache* table_cache, const InternalKeyComparator*);
+             TableCache* table_cache, TableCacheNVM* table_cache_nvm, const InternalKeyComparator*);
   VersionSet(const VersionSet&) = delete;
   VersionSet& operator=(const VersionSet&) = delete;
 
@@ -191,7 +278,13 @@ class VersionSet {
   uint64_t ManifestFileNumber() const { return manifest_file_number_; }
 
   // Allocate and return a new file number
-  uint64_t NewFileNumber() { return next_file_number_++; }
+  uint64_t NewFileNumber() {
+    // printf("next file numner : %lu\n", next_file_number_);
+    return next_file_number_++; 
+  }
+
+  // uint64_t NewSSTableNumber() { return next_sstable_number_++; }
+  uint64_t NewSegNumber() { return next_seg_number_++; }
 
   // Arrange to reuse "file_number" unless a newer file number has
   // already been allocated.
@@ -269,6 +362,8 @@ class VersionSet {
   };
   const char* LevelSummary(LevelSummaryStorage* scratch) const;
 
+
+  Status MakeNewFiles(Compaction* compact, std::vector<LevelOutput> &outputs, port::Mutex* mu) ;
  private:
   class Builder;
 
@@ -293,12 +388,27 @@ class VersionSet {
 
   void AppendVersion(Version* v);
 
+  Status SplitFileForInputs(const SegmentMeta* seg,Iterator* seg_iter,
+                            std::vector<TableInterval*>& table_intervals,
+                            port::Mutex* mu);
+
+  void SetupTableIntervals(std::vector<TableInterval*>& intervals,  const std::vector<FileMetaData*> &input);
+
+  // Iterator* NewSegKeyIterator(SegmentMeta* seg);
+
+  Status DecodeMetaVals(Slice& val, uint64_t *key_offset, uint64_t *key_data_offset); 
+
   Env* const env_;
   const std::string dbname_;
   const Options* const options_;
   TableCache* const table_cache_;
+  TableCacheNVM* const table_cache_nvm_;
+  TableCacheNVMAndInputs cache_nvm_inputs_;
   const InternalKeyComparator icmp_;
   uint64_t next_file_number_;
+
+  uint64_t next_seg_number_;
+
   uint64_t manifest_file_number_;
   uint64_t last_sequence_;
   uint64_t log_number_;
@@ -333,6 +443,9 @@ class Compaction {
 
   // Return the ith input file at "level()+which" ("which" must be 0 or 1).
   FileMetaData* input(int which, int i) const { return inputs_[which][i]; }
+
+  // FileMetaData* inputSSTable(int which, int i) const {return inputs_[which][i];}
+
 
   // Maximum size of files to build during this compaction.
   uint64_t MaxOutputFileSize() const { return max_output_file_size_; }
@@ -375,11 +488,14 @@ class Compaction {
   // Each compaction reads inputs from "level_" and "level_+1"
   // for level compaction we could put all files in "level_ + 1"
   // to inputs_[1], but it may be possible that 
-  std::vector<FileMetaData*> inputs_[2];  // The two sets of inputs
+  // std::vector<FileMetaData*> inputs_[2];  // The two sets of inputs
+  std::vector<FileMetaData*> inputs_[2];
 
   // State used to check for number of overlapping grandparent files
   // (parent == level_ + 1, grandparent == level_ + 2)
+  // std::vector<FileMetaData*> grandparents_;
   std::vector<FileMetaData*> grandparents_;
+
   size_t grandparent_index_;  // Index in grandparent_starts_
   bool seen_key_;             // Some output key has been seen
   int64_t overlapped_bytes_;  // Bytes of overlap between current output

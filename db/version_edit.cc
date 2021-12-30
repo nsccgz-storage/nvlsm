@@ -80,13 +80,25 @@ void VersionEdit::EncodeTo(std::string* dst) const {
     PutVarint64(dst, f.file_size);
     PutLengthPrefixedSlice(dst, f.smallest.Encode());
     PutLengthPrefixedSlice(dst, f.largest.Encode());
-  }
-}
 
-static bool GetInternalKey(Slice* input, InternalKey* dst) {
-  Slice str;
-  if (GetLengthPrefixedSlice(input, &str)) {
-    return dst->DecodeFrom(str);
+    PutVarint64(dst, f.segments.size());
+      for(size_t j = 0; j < f.segments.size(); j++) {
+        const SegmentMeta* seg = f.segments[j];
+        PutVarint64(dst, seg->data_offset);
+        PutVarint64(dst, seg->data_size);
+        PutVarint64(dst, seg->key_offset);
+        PutVarint64(dst, seg->key_size);
+        PutVarint64(dst, seg->file_number);
+        PutLengthPrefixedSlice(dst, seg->smallest.Encode());
+        PutLengthPrefixedSlice(dst, seg->largest.Encode());
+      }
+    }
+  }
+
+  static bool GetInternalKey(Slice* input, InternalKey* dst) {
+    Slice str;
+    if (GetLengthPrefixedSlice(input, &str)) {
+      return dst->DecodeFrom(str);
   } else {
     return false;
   }
@@ -179,6 +191,22 @@ Status VersionEdit::DecodeFrom(const Slice& src) {
             GetVarint64(&input, &f.file_size) &&
             GetInternalKey(&input, &f.smallest) &&
             GetInternalKey(&input, &f.largest)) {
+          bool parse_segment_success = true;
+          uint64_t seg_size;
+          GetVarint64(&input, &seg_size);
+          f.segments.resize(seg_size);
+          for(size_t i=0; i < seg_size; i++ ){
+            parse_segment_success &=  GetVarint64(&input, &f.segments[i]->data_offset);
+            parse_segment_success &=GetVarint64(&input, &f.segments[i]->data_size);
+            parse_segment_success &=GetVarint64(&input, &f.segments[i]->key_offset);
+            parse_segment_success &=GetVarint64(&input, &f.segments[i]->key_size);
+            parse_segment_success &=GetVarint64(&input, &f.segments[i]->file_number);
+
+            parse_segment_success &= GetInternalKey(&input, &f.segments[i]->smallest);
+            parse_segment_success &= GetInternalKey(&input, &f.segments[i]->largest);
+            assert(parse_segment_success);
+            // f.segments[i]
+          }
           new_files_.push_back(std::make_pair(level, f));
         } else {
           msg = "new-file entry";

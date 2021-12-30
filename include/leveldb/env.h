@@ -85,6 +85,9 @@ class LEVELDB_EXPORT Env {
   virtual Status NewRandomAccessFile(const std::string& fname,
                                      RandomAccessFile** result) = 0;
 
+
+  virtual Status NewRandomAccessFile2(const std::string& fname,
+                                     RandomAccessFile** result) = 0;
   // Create an object that writes to a new file with the specified
   // name.  Deletes any existing file with the same name and creates a
   // new file.  On success, stores a pointer to the new file in
@@ -98,7 +101,7 @@ class LEVELDB_EXPORT Env {
 
   virtual Status NewFixedSizeWritableFile(const std::string& fname,
                                           WritableFile** result,
-                                          int size) = 0;
+                                          uint64_t size) = 0;
 
   // Create an object that either appends to an existing file, or
   // writes to a new file (if the file does not exist to begin with).
@@ -402,7 +405,15 @@ class LEVELDB_EXPORT EnvWrapper : public Env {
   void SleepForMicroseconds(int micros) override {
     target_->SleepForMicroseconds(micros);
   }
-
+  Status NewRandomAccessFile2(const std::string& fname,
+                                     RandomAccessFile** result) override {
+  return target_->NewRandomAccessFile2(fname, result);
+  }                        
+  Status NewFixedSizeWritableFile(const std::string& fname,
+                                          WritableFile** result,
+                                          uint64_t size) {
+  return target_->NewFixedSizeWritableFile(fname, result, size);
+  }
  private:
   Env* target_;
 };

@@ -13,6 +13,7 @@
 #include "db/dbformat.h"
 #include "db/log_writer.h"
 #include "db/snapshot.h"
+#include "db/version_set.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
 #include "port/port.h"
@@ -118,7 +119,8 @@ class DBImpl : public DB {
 
   // Delete any unneeded files and stale in-memory entries.
   void RemoveObsoleteFiles() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-
+    
+//   void RemoveOutdatedTables() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   // Compact the in-memory write buffer to disk.  Switches to a new
   // log-file/memtable and writes a new descriptor iff successful.
   // Errors are recorded in bg_error_.
@@ -149,13 +151,17 @@ class DBImpl : public DB {
   void BackgroundCompaction() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void CleanupCompaction(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void CleanupCompactionNVM(CompactionStateNVM* compact)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+
   Status DoCompactionWork(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status DoSplitWork(CompactionStateNVM* compact) 
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  Status DoLevelCompactionWork(CompactionStateNVM* compact)
+  Status DoLevelCompactionWork(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
 
@@ -166,7 +172,7 @@ class DBImpl : public DB {
   Status InstallCompactionResults(CompactionState* compact);
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  Status InstallCompactionResultsNVM(CompactionStateNVM *compac)
+  Status InstallCompactionResultsNVM(CompactionState *compact, std::vector<LevelOutput>& new_files)
     EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status NewSplitCompactionOutput(CompactionStateNVM *compact);
@@ -188,6 +194,7 @@ class DBImpl : public DB {
 
   // table_cache_ provides its own synchronization
   TableCache* const table_cache_;
+  TableCacheNVM* const table_cache_nvm_;
 
   // Lock over the persistent DB state.  Non-null iff successfully acquired.
   FileLock* db_lock_;

@@ -37,6 +37,53 @@
 
 namespace leveldb{
 
+
+class StringSink : public WritableFile {
+ public:
+  ~StringSink() override = default;
+
+  const std::string& contents() const { return contents_; }
+
+  Status Close() override { return Status::OK(); }
+  Status Flush() override { return Status::OK(); }
+  Status Sync() override { return Status::OK(); }
+
+  Status Append(const Slice& data) override {
+    contents_.append(data.data(), data.size());
+    return Status::OK();
+  }
+
+ private:
+  std::string contents_;
+};
+
+
+class StringSource : public RandomAccessFile {
+ public:
+  StringSource(const Slice& contents)
+      : contents_(contents.data(), contents.size()) {}
+
+  ~StringSource() override = default;
+
+  uint64_t Size() const { return contents_.size(); }
+
+  Status Read(uint64_t offset, size_t n, Slice* result,
+              char* scratch) const override {
+    if (offset >= contents_.size()) {
+      return Status::InvalidArgument("invalid Read offset");
+    }
+    if (offset + n > contents_.size()) {
+      n = contents_.size() - offset;
+    }
+    std::memcpy(scratch, &contents_[offset], n);
+    *result = Slice(scratch, n);
+    return Status::OK();
+  }
+
+ private:
+  std::string contents_;
+};
+
 // An STL comparator that uses a Comparator
 namespace {
 struct STLLessThan {
@@ -52,9 +99,9 @@ struct STLLessThan {
 
 typedef std::map<std::string, std::string, STLLessThan> KVMap;
 
-struct root {
-  persistent_ptr<TableNVM> table;
-};
+// struct root {
+//   persistent_ptr<TableNVM> table;
+// };
 
 
 
@@ -111,21 +158,6 @@ public:
   }
 
   Status FinishImpl(const Options& options, const KVMap& data) override {
-    pool_base pop;
-    const char *path = "/tmp/tablenvm";
-    std::string layout = "TEST";
-
-    OptionsNvm nvm_option;
-    pop_ = openPool(path, layout);
-    transaction::exec_tx(pop_, [&]{
-
-      auto root = pop_.get_root();
-      root_ = pop_.get_root();
-
-      root_->table = make_persistent<TableNVM>(pop_, nvm_option, &comp_);
-    //new TableNVM(pop, nvm_option, &comp_);
-    });
-
     // turn to internal key
     // cast to slicenvm
     int seq = 1;
@@ -150,35 +182,37 @@ public:
 
 
 private:
-   bool fileExists(const char *path) {
-     return access(path, F_OK) != -1;
-   }
-  pool<root>  openPool(const char *path, std::string layout) {
-    
-    //persistent_ptr<TableNVM> q;
-    pool<root> pop;
-    try{
-        if(!fileExists(path)) {
-          pop = pool<root>::create(path, LAYOUT, PMEMOBJ_MIN_POOL);
-        } else {
-          pop = pool<root>::open(path, LAYOUT);
-        }
-    } catch (const pmem::pool_error &e){
-        std::cerr << "exception:" << e.what() << std::endl;
-        exit(1);
-    } catch(const pmem::transaction_error &e) {
-        std::cerr << "exception:" << e.what() <<std::endl;
-        exit(1);
-    }
-
-    //q = pop.get_root();
-    return pop;
+  const InternalKeyComparator comp_;
+  StringSource *source;
+  TableNVM *table_;
+  bool fileExists(const char *path) {
+    return access(path, F_OK) != -1;
   }
-  pool<root> pop_;
-  persistent_ptr<root> root_;
+  // pool<root>  openPool(const char *path, std::string layout) {
+    
+  //   //persistent_ptr<TableNVM> q;
+  //   pool<root> pop;
+  //   try{
+  //       if(!fileExists(path)) {
+  //         pop = pool<root>::create(path, LAYOUT, PMEMOBJ_MIN_POOL);
+  //       } else {
+  //         pop = pool<root>::open(path, LAYOUT);
+  //       }
+  //   } catch (const pmem::pool_error &e){
+  //       std::cerr << "exception:" << e.what() << std::endl;
+  //       exit(1);
+  //   } catch(const pmem::transaction_error &e) {
+  //       std::cerr << "exception:" << e.what() <<std::endl;
+  //       exit(1);
+  //   }
+
+  //   //q = pop.get_root();
+  //   return pop;
+  // }
+  // pool<root> pop_;
+  // persistent_ptr<root> root_;
   //persistent_ptr<TableNVM> table_nvm_;
   //TableNVM *table_nvm_;
-  const InternalKeyComparator comp_;
 
 };
 

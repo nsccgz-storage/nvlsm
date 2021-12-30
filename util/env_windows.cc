@@ -387,6 +387,9 @@ class WindowsEnv : public Env {
     return Status::OK();
   }
 
+  Status NewRandomAccessFile2(const std::string& filename,
+                             RandomAccessFile** result) override {}
+
   Status NewRandomAccessFile(const std::string& filename,
                              RandomAccessFile** result) override {
     *result = nullptr;
@@ -435,7 +438,7 @@ class WindowsEnv : public Env {
   }
 
   Status NewFixedSizeWritableFile(const std::string& filename,
-                         WritableFile** result, int size) override {
+                         WritableFile** result, uint64_t size) override {
 
     return Status::OK();
 }
