@@ -169,8 +169,9 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       owns_info_log_(options_.info_log != raw_options.info_log),
       owns_cache_(options_.block_cache != raw_options.block_cache),
       dbname_(dbname),
+      db_nvm_name_("/mnt/pmem/nvlsm"),
       table_cache_(new TableCache(dbname_, options_, TableCacheSize(options_))),
-      table_cache_nvm_(new TableCacheNVM(dbname_, options_, TableCacheSize(options_))),
+      table_cache_nvm_(new TableCacheNVM(db_nvm_name_, options_, TableCacheSize(options_))),
       db_lock_(nullptr),
       shutting_down_(false),
       background_work_finished_signal_(&mutex_),
@@ -1983,11 +1984,13 @@ Status DB::Open(const Options& options, const std::string& dbname, DB** dbptr) {
 
 Snapshot::~Snapshot() = default;
 
-Status DestroyDB(const std::string& dbname, const Options& options) {
+Status DestroyDB(const std::string& dbname, const std::string& db_nvm_name, const Options& options) {
   Env* env = options.env;
   std::vector<std::string> filenames;
+    std::vector<std::string> nvm_filenames;
   Status result = env->GetChildren(dbname, &filenames);
-  if (!result.ok()) {
+    Status result_nvm =env->GetChildren(db_nvm_name, &nvm_filenames);
+  if (!result.ok() || !result_nvm.ok()) {
     // Ignore error in case directory does not exist
     return Status::OK();
   }
@@ -2007,10 +2010,25 @@ Status DestroyDB(const std::string& dbname, const Options& options) {
         }
       }
     }
+
+    if(result_nvm.ok()) {
+        for(size_t i=0; i < nvm_filenames.size(); i++) {
+            if(ParseFileName(nvm_filenames[i], &number, &type) &&
+                type != kDBLockFile) {
+
+               Status del = env->RemoveFile(db_nvm_name + "/" + nvm_filenames[i]) ;
+                if(result_nvm.ok() && !del.ok()) {
+                    result_nvm = del;
+                }
+            }
+        }
+    }
     env->UnlockFile(lock);  // Ignore error since state is already gone
     env->RemoveFile(lockname);
     env->RemoveDir(dbname);  // Ignore error in case dir contains other files
+    env->RemoveDir(db_nvm_name);
   }
+
   return result;
 }
 

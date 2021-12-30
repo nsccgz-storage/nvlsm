@@ -655,11 +655,11 @@ class PosixEnv : public Env {
     if(status.ok()) {
       void *mmap_base = ::mmap(nullptr, file_size, PROT_READ, MAP_SHARED, fd, 0);
       if(mmap_base != MAP_FAILED   ) {
-        // if(pmem_is_pmem(mmap_base, file_size)) {
-        //   printf("random access file2:  is pmem\n");
-        // } else {
-        //   printf("random access file2: not pemem.\n");
-        // }
+         if(pmem_is_pmem(mmap_base, file_size)) {
+           printf("random access file2:  is pmem\n");
+         } else {
+           printf("random access file2: not pemem.\n");
+         }
 
         *result = new PosixMmapReadableFile2(filename, reinterpret_cast<char*>(mmap_base),
                                               file_size);
@@ -691,11 +691,11 @@ class PosixEnv : public Env {
       printf("underlying storage is not pmem\n");
     }
 
-    // *result = new PosixPmemWritableFile(raw_, size, is_pmem);
-    Status s = NewAppendableFile(filename, result);
+    *result = new PosixPmemWritableFile(raw_, size, is_pmem);
+    //Status s = NewAppendableFile(filename, result);
     // Status s = NewWritableFile(filename, result);
-    // return Status::OK();
-    return s;
+    return Status::OK();
+    //return s;
   }
 
   Status NewWritableFile(const std::string& filename,

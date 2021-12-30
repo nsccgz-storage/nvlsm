@@ -121,6 +121,8 @@ static bool FLAGS_reuse_logs = false;
 // Use the db with the following name.
 static const char* FLAGS_db = nullptr;
 
+static const char* FLAGS_db_nvm = nullptr;
+
 namespace leveldb {
 
 namespace {
@@ -480,7 +482,7 @@ class Benchmark {
       }
     }
     if (!FLAGS_use_existing_db) {
-      DestroyDB(FLAGS_db, Options());
+      DestroyDB(FLAGS_db, FLAGS_db_nvm, Options());
     }
   }
 
@@ -597,7 +599,7 @@ class Benchmark {
         } else {
           delete db_;
           db_ = nullptr;
-          DestroyDB(FLAGS_db, Options());
+          DestroyDB(FLAGS_db, FLAGS_db_nvm, Options());
           Open();
         }
       }
@@ -1024,6 +1026,7 @@ int main(int argc, char** argv) {
   FLAGS_block_size = leveldb::Options().block_size;
   FLAGS_open_files = leveldb::Options().max_open_files;
   std::string default_db_path;
+  std::string default_db_nvm_path;
 
   for (int i = 1; i < argc; i++) {
     double d;
@@ -1083,6 +1086,12 @@ int main(int argc, char** argv) {
     default_db_path += "/dbbench";
     FLAGS_db = default_db_path.c_str();
   }
+
+  if(FLAGS_db_nvm == nullptr ) {
+    default_db_nvm_path = "/mnt/pmem/nvlsm";    
+    FLAGS_db_nvm = default_db_nvm_path.c_str();
+    }
+
 
   leveldb::Benchmark benchmark;
   benchmark.Run();

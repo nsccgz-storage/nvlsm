@@ -40,6 +40,8 @@ static std::string RandomKey(Random* rnd) {
   return test::RandomKey(rnd, len);
 }
 
+static std::string db_nvm_name = "/pmem/test";
+
 namespace {
 class AtomicCounter {
  public:
@@ -239,14 +241,14 @@ class DBTest : public testing::Test {
   DBTest() : env_(new SpecialEnv(Env::Default())), option_config_(kDefault) {
     filter_policy_ = NewBloomFilterPolicy(10);
     dbname_ = testing::TempDir() + "db_test";
-    DestroyDB(dbname_, Options());
+    DestroyDB(dbname_, db_nvm_name, Options());
     db_ = nullptr;
     Reopen();
   }
 
   ~DBTest() {
     delete db_;
-    DestroyDB(dbname_, Options());
+    DestroyDB(dbname_, db_nvm_name, Options());
     delete env_;
     delete filter_policy_;
   }
@@ -297,7 +299,7 @@ class DBTest : public testing::Test {
   void DestroyAndReopen(Options* options = nullptr) {
     delete db_;
     db_ = nullptr;
-    DestroyDB(dbname_, Options());
+    DestroyDB(dbname_, db_nvm_name,  Options());
     ASSERT_LEVELDB_OK(TryReopen(options));
   }
 
@@ -1705,7 +1707,7 @@ TEST_F(DBTest, ManualCompaction) {
 
 TEST_F(DBTest, DBOpen_Options) {
   std::string dbname = testing::TempDir() + "db_options_test";
-  DestroyDB(dbname, Options());
+  DestroyDB(dbname, db_nvm_name, Options());
 
   // Does not exist, and create_if_missing == false: error
   DB* db = nullptr;
@@ -1757,7 +1759,7 @@ TEST_F(DBTest, DestroyEmptyDir) {
   ASSERT_LEVELDB_OK(env.GetChildren(dbname, &children));
   // The stock Env's do not filter out '.' and '..' special files.
   ASSERT_EQ(2, children.size());
-  ASSERT_LEVELDB_OK(DestroyDB(dbname, opts));
+  ASSERT_LEVELDB_OK(DestroyDB(dbname, db_nvm_name, opts));
   ASSERT_TRUE(!env.FileExists(dbname));
 
   // Should also be destroyed if Env is filtering out dot files.
@@ -1766,7 +1768,7 @@ TEST_F(DBTest, DestroyEmptyDir) {
   ASSERT_TRUE(env.FileExists(dbname));
   ASSERT_LEVELDB_OK(env.GetChildren(dbname, &children));
   ASSERT_EQ(0, children.size());
-  ASSERT_LEVELDB_OK(DestroyDB(dbname, opts));
+  ASSERT_LEVELDB_OK(DestroyDB(dbname, db_nvm_name, opts));
   ASSERT_TRUE(!env.FileExists(dbname));
 }
 
@@ -1783,14 +1785,14 @@ TEST_F(DBTest, DestroyOpenDB) {
 
   // Must fail to destroy an open db.
   ASSERT_TRUE(env_->FileExists(dbname));
-  ASSERT_TRUE(!DestroyDB(dbname, Options()).ok());
+  ASSERT_TRUE(!DestroyDB(dbname, db_nvm_name, Options()).ok());
   ASSERT_TRUE(env_->FileExists(dbname));
 
   delete db;
   db = nullptr;
 
   // Should succeed destroying a closed db.
-  ASSERT_LEVELDB_OK(DestroyDB(dbname, Options()));
+  ASSERT_LEVELDB_OK(DestroyDB(dbname, db_nvm_name, Options()));
   ASSERT_TRUE(!env_->FileExists(dbname));
 }
 
@@ -2367,7 +2369,7 @@ static void BM_LogAndApply(benchmark::State& state) {
   const int num_base_files = state.range(0);
 
   std::string dbname = testing::TempDir() + "leveldb_test_benchmark";
-  DestroyDB(dbname, Options());
+  DestroyDB(dbname, db_nvm_name, Options());
 
   DB* db = nullptr;
   Options opts;

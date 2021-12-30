@@ -416,7 +416,7 @@ class DBConstructor : public Constructor {
 
     Options options;
     options.comparator = comparator_;
-    Status status = DestroyDB(name, options);
+    Status status = DestroyDB(name, "/pmem/test",  options);
     ASSERT_TRUE(status.ok()) << status.ToString();
 
     options.create_if_missing = true;

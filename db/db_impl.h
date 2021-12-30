@@ -191,6 +191,7 @@ class DBImpl : public DB {
   const bool owns_info_log_;
   const bool owns_cache_;
   const std::string dbname_;
+  const std::string db_nvm_name_;
 
   // table_cache_ provides its own synchronization
   TableCache* const table_cache_;

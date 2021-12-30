@@ -272,7 +272,7 @@ void leveldb_compact_range(leveldb_t* db, const char* start_key,
 
 void leveldb_destroy_db(const leveldb_options_t* options, const char* name,
                         char** errptr) {
-  SaveError(errptr, DestroyDB(name, options->rep));
+  SaveError(errptr, DestroyDB(name, "/pmem/test", options->rep));
 }
 
 void leveldb_repair_db(const leveldb_options_t* options, const char* name,

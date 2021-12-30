@@ -45,9 +45,9 @@ Status BuildTableNVM(const std::string& dbname, Env* env, const Options& options
             meta->largest.DecodeFrom(key);
         }
         uint64_t file_size = builder->FileSize();
-        // s = env->NewFixedSizeWritableFile(fname, &file, file_size);
+        s = env->NewFixedSizeWritableFile(fname, &file, file_size);
         // s = env->NewWritableFile(fname, &file);
-        s = env->NewAppendableFile(fname, &file);
+        // s = env->NewAppendableFile(fname, &file);
         if(!s.ok()) {
             return s;
         }
