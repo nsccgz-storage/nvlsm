@@ -1217,6 +1217,13 @@ int VersionSet::NumLevelFiles(int level) const {
   return current_->files_[level].size();
 }
 
+const char* VersionSet::LevelSegSummary(std::string&s) const {
+  // std::snprintf(scratch->buffer, sizeof(scratch->buffer), "")
+  for(int i=0; i < current_->files_[1].size(); i++) {
+    s.append("file size:" + std::to_string(current_->files_[1][i]->file_size) + " segment number:" + std::to_string(current_->files_[1][i]->segments.size()));
+  }
+}
+
 const char* VersionSet::LevelSummary(LevelSummaryStorage* scratch) const {
   // Update code if kNumLevels changes
   static_assert(config::kNumLevels == 7, "");

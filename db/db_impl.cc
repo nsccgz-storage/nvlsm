@@ -1299,13 +1299,6 @@ Status DBImpl::DoLevelCompactionWork(CompactionState* compact) {
     status = Status::IOError("Deleting DB during compaction");
   }
  
-
-  // if(status.ok()) {
-  //   status = input->status();
-  // }
-  // delete input;
-  // input = nullptr;
-  
   // add compaction stats.
   CompactionStats stats;
   stats.micros = env_->NowMicros() - start_micros - imm_micros;
@@ -1331,6 +1324,9 @@ Status DBImpl::DoLevelCompactionWork(CompactionState* compact) {
 
   VersionSet::LevelSummaryStorage tmp;
   Log(options_.info_log, "virtual compacted to: %s", versions_->LevelSummary(&tmp));
+
+  std::string tmp_s;
+  Log(options_.info_log, "Level1 segments stats: %s", versions_->LevelSegSummary(tmp_s));
   return status;
 
 

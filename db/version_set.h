@@ -362,6 +362,7 @@ class VersionSet {
   };
   const char* LevelSummary(LevelSummaryStorage* scratch) const;
 
+  const char *LevelSegSummary(std::string& s) const ;
 
   Status MakeNewFiles(Compaction* compact, std::vector<LevelOutput> &outputs, port::Mutex* mu) ;
  private:
