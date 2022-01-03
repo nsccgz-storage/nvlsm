@@ -100,6 +100,7 @@ class LEVELDB_EXPORT Cache {
  private:
   void LRU_Remove(Handle* e);
   void LRU_Append(Handle* e);
+  void Ref(Handle* e);
   void Unref(Handle* e);
 
   struct Rep;

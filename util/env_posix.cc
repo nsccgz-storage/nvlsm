@@ -231,6 +231,7 @@ class PosixMmapReadableFile final : public RandomAccessFile {
 
   ~PosixMmapReadableFile() override {
     ::munmap(static_cast<void*>(mmap_base_), length_);
+    // printf("posix mmap readable file closed\n");
     mmap_limiter_->Release();
   }
 
@@ -274,8 +275,10 @@ public:
 
   }
 
-  ~PosixMmapReadableFile2() {
-    ::munmap(static_cast<void*>(mmap_base_), length_);
+  ~PosixMmapReadableFile2() override {
+    // ::munmap(static_cast<void*>(mmap_base_), length_);
+    pmem_unmap(mmap_base_, length_);
+    // printf("pmem unmap\n");
   }
 
   Status Read(uint64_t offset, size_t n, Slice* result, char* scratch) const override {
@@ -317,12 +320,16 @@ public:
 
   // maybe just do nothing .
   Status Close() override { 
-
+    // printf("pmem writable file closed\n");
+    pmem_unmap(raw_, size_);
     return Status::OK();
     // return Sync();
   }
 
-  Status Flush() override { return Status::OK();}
+  Status Flush() override {
+    return Sync();
+    // return Status::OK();
+  }
 
   Status Sync() override {
     pmem_persist(raw_, size_);
@@ -653,11 +660,14 @@ class PosixEnv : public Env {
     Status status = GetFileSize(filename, &file_size);
     // Status status;
     if(status.ok()) {
-      void *mmap_base = ::mmap(nullptr, file_size, PROT_READ, MAP_SHARED, fd, 0);
-      if(mmap_base != MAP_FAILED   ) {
-         if(pmem_is_pmem(mmap_base, file_size)) {
-           printf("random access file2:  is pmem\n");
-         } else {
+      // void *mmap_base = ::mmap(nullptr, file_size, PROT_READ, MAP_SHARED, fd, 0);
+      size_t mapped_len;
+      int is_pmem;
+      void *mmap_base = pmem_map_file(filename.data(), file_size, PMEM_FILE_CREATE,
+                                      0666, &mapped_len, &is_pmem);
+      if(mmap_base != NULL || mmap_base != MAP_FAILED   ) {
+        //  if(pmem_is_pmem(mmap_base, file_size)) {
+        if(!is_pmem) {
            printf("random access file2: not pemem.\n");
          }
 

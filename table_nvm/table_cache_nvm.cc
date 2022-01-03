@@ -5,22 +5,44 @@
 
 
 namespace leveldb {
-struct SegmentAndFile{
+// struct SegmentAndFile{
+//   Segment* seg;
+//   RandomAccessFile* file;
+// };
+
+
+struct SegmentAndFileHandle{
+  Cache* cache;
   Segment* seg;
-  RandomAccessFile* file;
+  Cache::Handle* file_handle;
 };
-static void DeleteSegmentAndFile(const Slice& key, void* value) {
+
+static void DeleteSegment(const Slice& key, void* value) {
   // SegmentAndFile* sf = reinterpret_cast<SegmentAndFile*>(value);
   // delete sf->file;
   // delete sf->seg;
-  Segment* seg = reinterpret_cast<Segment*>(value);
-  delete seg;
+  // Segment* seg = reinterpret_cast<Segment*>(value);
+  SegmentAndFileHandle* seg_file_handle = reinterpret_cast<SegmentAndFileHandle*>(value);
+  delete seg_file_handle->seg;
+  seg_file_handle->cache->Release(seg_file_handle->file_handle);
+  delete seg_file_handle;
 
 }
 
+struct TableAndSegHandles {
+  Cache* cache;
+  TableNVM* table;
+  std::vector<Cache::Handle*> handles;
+};
 static void DeleteEntryNVM(const Slice& key, void *value) {
-  TableNVM* t = reinterpret_cast<TableNVM*>(value);
-  delete t;
+  // TableNVM* t = reinterpret_cast<TableNVM*>(value);
+  // table and handles of all segments
+  TableAndSegHandles *t_segs = reinterpret_cast<TableAndSegHandles*>(value);
+  delete t_segs->table;
+  for(int i=0; i < t_segs->handles.size(); i++) {
+    t_segs->cache->Release(t_segs->handles[i]);
+  }
+  delete t_segs;
 }
 
 static void UnrefEntry(void* arg1, void* arg2) {
@@ -34,7 +56,9 @@ TableCacheNVM::TableCacheNVM(const std::string &dbname, const Options& option, i
 : env_(option.env),
   dbname_(dbname),
   options_(option),
-  cache_(NewLRUCache(entries)) {}
+  table_cache_(NewLRUCache(entries)),
+  seg_cache_(NewLRUCache(entries)),
+  file_cache_(NewLRUCache(entries)) {}
 
 Status TableCacheNVM::Get(const ReadOptions& options,const FileMetaData* file_meta, 
                  const Slice& k, void* arg,
@@ -47,9 +71,11 @@ Status TableCacheNVM::Get(const ReadOptions& options,const FileMetaData* file_me
   Cache::Handle* handle = nullptr;
   Status s = FindTableNVM(file_meta, &handle);
   if(s.ok()) {
-    TableNVM* t = reinterpret_cast<TableNVM*>(cache_->Value(handle));
+    // TableNVM* t = reinterpret_cast<TableNVM*>(cache_->Value(handle));
+    TableAndSegHandles* t_segs = reinterpret_cast<TableAndSegHandles*>(table_cache_->Value(handle));
+    TableNVM* t = t_segs->table;
     s = t->InternalGet(options, k, arg, handle_result);
-    cache_->Release(handle);
+    table_cache_->Release(handle);
   } 
   return s; 
 }
@@ -62,10 +88,12 @@ std::vector<Iterator*> TableCacheNVM::NewIndexIterator(const FileMetaData* file_
   if(!s.ok()) {
     return {NewErrorIterator(s)};
   }
-  TableNVM* table = reinterpret_cast<TableNVM*>(cache_->Value(handle));
+  // TableNVM* table = reinterpret_cast<TableNVM*>(cache_->Value(handle));
+  TableAndSegHandles* t_segs = reinterpret_cast<TableAndSegHandles*>(table_cache_->Value(handle));
+  TableNVM* table = t_segs->table;
   std::vector<Iterator*> idx_iters = table->NewIndexIterator();
   assert(!idx_iters.empty());
-  idx_iters[0]->RegisterCleanup(&UnrefEntry, cache_, handle);
+  idx_iters[0]->RegisterCleanup(&UnrefEntry, table_cache_, handle);
   // index_iters =  std::move(table->NewIndexIterator());
   // cache_->Release(handle);
 
@@ -94,9 +122,11 @@ Iterator* TableCacheNVM::NewIterator(const ReadOptions& options,const FileMetaDa
       return NewErrorIterator(s);
     }
 
-    TableNVM* t = reinterpret_cast<TableNVM*>(cache_->Value(handle));
+    // TableNVM* t = reinterpret_cast<TableNVM*>(cache_->Value(handle));
+    TableAndSegHandles* t_segs = reinterpret_cast<TableAndSegHandles*>(table_cache_->Value(handle));
+    TableNVM* t = t_segs->table;
     Iterator* result = t->NewIterator(options);
-    result->RegisterCleanup(UnrefEntry, cache_, handle);
+    result->RegisterCleanup(UnrefEntry, table_cache_, handle);
     if(tableptr != nullptr) {
       *tableptr = t;
     }
@@ -112,7 +142,7 @@ void TableCacheNVM::Evict( CacheType type, uint64_t number){
     buf[0] = type;
     EncodeFixed64(buf+1, number);
     Slice key(buf, sizeof(buf));
-    cache_->Erase(key);
+    table_cache_->Erase(key);
 }
 
 
@@ -128,29 +158,34 @@ Status TableCacheNVM::FindTableNVM(const FileMetaData* file_meta, Cache::Handle*
   buf[0] = TableCacheType;
   EncodeFixed64(buf+1, file_meta->number);
   Slice key(buf, sizeof(buf));
-  *handle = cache_->Lookup(key);
+  *handle = table_cache_->Lookup(key);
   if(*handle == nullptr) {
     TableNVM* table = nullptr;
     // s = TableNVM::Open(options_, file_meta, env_, &table);
     std::vector<Segment*> segs;
+    std::vector<Cache::Handle*> seg_handles;
     for(int i=0; i < file_meta->segments.size(); i++) {
       Cache::Handle* seg_handle = nullptr;
       s = FindSegment(file_meta->segments[i], &seg_handle);
       if(!s.ok()) {
         // if not ok, then we need to delete all segments in the vector.
 
-
         return s;
       }
-      
-      segs.push_back(reinterpret_cast<Segment*>(cache_->Value(seg_handle)));
+      seg_handles.push_back(seg_handle);
+      // segs.push_back(reinterpret_cast<Segment*>(cache_->Value(seg_handle)));
+      segs.push_back(reinterpret_cast<SegmentAndFileHandle*>(seg_cache_->Value(seg_handle))->seg);
     } 
 
     s = TableNVM::Open(options_, segs, &table);
     if(!s.ok()) {
       assert(table == nullptr);
     } else {
-      *handle = cache_->Insert(key, table, 1, DeleteEntryNVM);
+      TableAndSegHandles* t_segs = new TableAndSegHandles;
+      t_segs->cache = seg_cache_;
+      t_segs->table = table;
+      t_segs->handles = std::move(seg_handles);
+      *handle = table_cache_->Insert(key, t_segs, 1, DeleteEntryNVM);
     }
   }
 
@@ -160,6 +195,7 @@ static void DeleteFile(const Slice& key, void* value) {
   RandomAccessFile* file = reinterpret_cast<RandomAccessFile*>(value);
   delete file;
 }
+
 Status TableCacheNVM::FindFile(uint64_t file_number, Cache::Handle** handle) {
     uint64_t file_num = file_number;
     char file_num_buf[1 + sizeof(file_num)];
@@ -167,7 +203,7 @@ Status TableCacheNVM::FindFile(uint64_t file_number, Cache::Handle** handle) {
     EncodeFixed64(file_num_buf+1, file_num);
     Slice file_key(file_num_buf, sizeof(file_num_buf));
     // printf("find file key: %s\n", file_key.data());
-    Cache::Handle* file_handle = cache_->Lookup(file_key);
+    Cache::Handle* file_handle = file_cache_->Lookup(file_key);
     Status s;
     if(file_handle == nullptr) {
       std::string fname = TableFileName(dbname_, file_number);
@@ -178,7 +214,7 @@ Status TableCacheNVM::FindFile(uint64_t file_number, Cache::Handle** handle) {
       if(!s.ok()) {
         printf("find file failed\n");
       }
-      file_handle = cache_->Insert(file_key, result, 1, &DeleteFile);
+      file_handle = file_cache_->Insert(file_key, result, 1, &DeleteFile);
     }
     *handle = file_handle;
     return s;
@@ -193,7 +229,7 @@ Status TableCacheNVM::FindSegment(const SegmentMeta* segment_meta, Cache::Handle
   EncodeFixed64(seg_buf+1, seg_num);
   Slice key(seg_buf, sizeof(seg_buf));
   
-  Cache::Handle* seg_handle = cache_->Lookup(key);
+  Cache::Handle* seg_handle = seg_cache_->Lookup(key);
   Status s;
   if(seg_handle == nullptr) {
 
@@ -203,30 +239,24 @@ Status TableCacheNVM::FindSegment(const SegmentMeta* segment_meta, Cache::Handle
     if(!s.ok()) {
       return s;
     }
-    // RandomAccessFile* data_file = nullptr;
-    // RandomAccessFile* key_file = nullptr;
-    // s = env_->NewRandomAccessFile2(fname, segment_meta->data_offset, segment_meta->data_size, &data_file);
-    // s = env_->NewRandomAccessFile2(fname, segment_meta->key_offset, segment_meta->key_size, &key_file);
-    // if(!s.ok()) {
-    //   printf("segment open file failed\n");
-    //   return s;
-    // }
-    RandomAccessFile* file = reinterpret_cast<RandomAccessFile*>(cache_->Value(file_handle));
+    RandomAccessFile* file = reinterpret_cast<RandomAccessFile*>(file_cache_->Value(file_handle));
     // s = Segment::Open(options_, data_file, segment_meta->data_offset, key_file, segment_meta->key_size, &segment);
     // printf("try to open seg: %lu, corresponding file num: %lu\n", segment_meta->seg_number, segment_meta->file_number);
     s = Segment::Open(options_, file, segment_meta->data_offset, segment_meta->data_size, segment_meta->key_offset, segment_meta->key_size, &segment);
     if(!s.ok()) {
       assert(segment == nullptr);
       delete file;
-      // delete data_file;
-      // delete key_file;
       return s;
     }
 
     // SegmentAndFile* sf = new SegmentAndFile;
     // sf->file = data_file;
     // sf->seg = segment;
-    seg_handle = cache_->Insert(key, segment, 1, &DeleteSegmentAndFile); 
+    SegmentAndFileHandle* sf = new SegmentAndFileHandle;
+    sf->cache = file_cache_;
+    sf->file_handle = file_handle;
+    sf->seg = segment;
+    seg_handle = seg_cache_->Insert(key, sf, 1, &DeleteSegment); 
 
   }
 
@@ -238,7 +268,10 @@ Status TableCacheNVM::FindSegment(const SegmentMeta* segment_meta, Cache::Handle
 
 
 TableCacheNVM::~TableCacheNVM() {
-  delete cache_;  
+  // delete cache_;  
+  delete table_cache_;
+  delete seg_cache_;
+  delete file_cache_;
 }
 
 }

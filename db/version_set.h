@@ -365,6 +365,8 @@ class VersionSet {
   const char *LevelSegSummary(std::string& s) const ;
 
   Status MakeNewFiles(Compaction* compact, std::vector<LevelOutput> &outputs, port::Mutex* mu) ;
+  // void EvictSegment(uint64_t seg_num) ;
+  
  private:
   class Builder;
 

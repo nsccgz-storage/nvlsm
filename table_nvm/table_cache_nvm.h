@@ -47,7 +47,10 @@ private:
     Env* const env_;
     const std::string dbname_;
     const Options& options_;
-    Cache* cache_;
+    // Cache* cache_;
+    Cache* table_cache_;
+    Cache* seg_cache_;
+    Cache* file_cache_;
     const std::string nvm_path_;
 
 

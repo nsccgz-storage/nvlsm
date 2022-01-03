@@ -26,7 +26,9 @@ struct Segment::SegRep {
         // delete file;
         for(int i=0; i < key_metas.size(); i++) {
             delete key_metas[i];
+            key_metas[i] = nullptr;
         }
+        key_metas.clear();
         if(key_meta != nullptr) {
             delete key_meta;
             key_meta = nullptr;
@@ -446,8 +448,9 @@ Status Segment::Open(const Options& options, RandomAccessFile* file, uint64_t da
     // s = key_file->Read(0, key_size, &key_contens, key_buf);
     s = file->Read(key_offset, key_size, &key_contens, key_buf);
     const char* key_data = key_contens.data();
+    assert(key_contens.size() == key_size);
     if(key_data != key_buf) {
-        delete key_buf;
+        delete[] key_buf;
     } else {
         seg_rep->key_meta = key_buf;
     }
@@ -473,7 +476,10 @@ Status Segment::Open(const Options& options, RandomAccessFile* file, uint64_t da
 
         Slice key_data_offset_slice = Slice(key_data+cur_meta_size+8+cur_key_size, 16);
 
-        seg_rep->key_metas.push_back(new KeyMetaData(key, key_offset_slice, data_offset_slice, key_data_offset_slice));
+        KeyMetaData* key_meta_ptr= new KeyMetaData(key, key_offset_slice, data_offset_slice, key_data_offset_slice);
+        assert(key_meta_ptr != nullptr);
+        // seg_rep->key_metas.push_back(new KeyMetaData(key, key_offset_slice, data_offset_slice, key_data_offset_slice));
+        seg_rep->key_metas.push_back(key_meta_ptr);
 
         uint64_t cur_key_total_size = 8 + cur_key_size + 8 + 8;
         cur_meta_size += cur_key_total_size;
@@ -497,9 +503,9 @@ Iterator* Segment::NewIndexIterator(const ReadOptions& read_options) const {
 }
 
 Segment::~Segment() {
-    for(int i=0; i < seg_rep_->key_metas.size(); i++) {
-        delete seg_rep_->key_metas[i];
-    }
+    // for(int i=0; i < seg_rep_->key_metas.size(); i++) {
+    //     delete seg_rep_->key_metas[i];
+    // }
     // delete seg_rep_->data_file;
     delete seg_rep_;
 

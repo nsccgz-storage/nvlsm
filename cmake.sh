@@ -11,10 +11,10 @@ Build() {
 	cd build
 	if [ "$1" = "$build_type_debug" ]; then
 		echo "bulid type: debug" 
-		cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . -j
+		cmake3 -DCMAKE_BUILD_TYPE=Debug .. && cmake3 --build . -j
 	else
 		echo "build type: release"
-		cmake  -DMAKE_BUILD_TYPE=Release .. && cmake --build . -j
+		cmake3  -DMAKE_BUILD_TYPE=Release .. && cmake3 --build . -j
 	fi
 
 }

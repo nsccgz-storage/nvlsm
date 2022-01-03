@@ -171,6 +171,7 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       dbname_(dbname),
       db_nvm_name_("/mnt/pmem/nvlsm"),
       table_cache_(new TableCache(dbname_, options_, TableCacheSize(options_))),
+      // table_cache_nvm_(new TableCacheNVM(db_nvm_name_, options_, TableCacheSize(options_))),
       table_cache_nvm_(new TableCacheNVM(db_nvm_name_, options_, TableCacheSize(options_))),
       db_lock_(nullptr),
       shutting_down_(false),
@@ -337,6 +338,7 @@ Status DBImpl::Recover(VersionEdit* edit, bool* save_manifest) {
   // committed only when the descriptor is created, and this directory
   // may already exist from a previous failed creation attempt.
   env_->CreateDir(dbname_);
+  env_->CreateDir(db_nvm_name_);
   assert(db_lock_ == nullptr);
   Status s = env_->LockFile(LockFileName(dbname_), &db_lock_);
   if (!s.ok()) {
@@ -345,8 +347,8 @@ Status DBImpl::Recover(VersionEdit* edit, bool* save_manifest) {
 
   if (!env_->FileExists(CurrentFileName(dbname_))) {
     if (options_.create_if_missing) {
-      Log(options_.info_log, "Creating DB %s since it was missing.",
-          dbname_.c_str());
+      Log(options_.info_log, "Creating DB %s, %s since it was missing.",
+          dbname_.c_str(), db_nvm_name_.c_str());
       s = NewDB();
       if (!s.ok()) {
         return s;
@@ -564,7 +566,7 @@ Status DBImpl::WriteLevel0TableNVM(MemTable* mem, VersionEdit* edit, Version* ba
   Status s;
   {
     mutex_.Unlock();
-    s = BuildTableNVM(dbname_, env_, options_, table_cache_nvm_, iter, &meta,  new_seg_number);
+    s = BuildTableNVM(db_nvm_name_, env_, options_, table_cache_nvm_, iter, &meta,  new_seg_number);
     mutex_.Lock();
   }
 

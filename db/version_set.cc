@@ -43,9 +43,12 @@ static int64_t ExpandedCompactionByteSizeLimit(const Options* options) {
 static double MaxBytesForLevel(const Options* options, int level) {
   // Note: the result for level zero is not really used since we set
   // the level-0 compaction threshold based on number of files.
+  double result = 10. * 1048576.0;
+  // if(level == 1) {
+  //   // return result * 10.;
+  // }
 
   // Result for both level-0 and level-1
-  double result = 10. * 1048576.0;
   while (level > 1) {
     result *= 10;
     level--;
@@ -707,6 +710,13 @@ class VersionSet::Builder {
         FileMetaData* f = to_unref[i];
         f->refs--;
         if (f->refs <= 0) {
+          // for(int i=0; i < f->segments.size(); i++) {
+          //   f->segments[i]->refs--;
+          //   if(f->segments[i]->refs <= 0) {
+          //     vset->
+          //   }
+          // }
+          
           delete f;
         }
       }
@@ -1219,9 +1229,25 @@ int VersionSet::NumLevelFiles(int level) const {
 
 const char* VersionSet::LevelSegSummary(std::string&s) const {
   // std::snprintf(scratch->buffer, sizeof(scratch->buffer), "")
+  // printf("LevelSegSumary: level1 file num:%d \n", current_->files_[1].size());
+    s.append("file sizes: [");
   for(int i=0; i < current_->files_[1].size(); i++) {
-    s.append("file size:" + std::to_string(current_->files_[1][i]->file_size) + " segment number:" + std::to_string(current_->files_[1][i]->segments.size()));
+    s.append(std::to_string(current_->files_[1][i]->file_size) + " ");
   }
+  s.append("] \n");
+  for(int i=0; i < current_->files_[1].size(); i++) {
+    
+    s.append("File_num: " + std::to_string(current_->files_[1][i]->number) + "\n");
+    s.append("file total size:" + std::to_string(current_->files_[1][i]->file_size) + " segment count:" + std::to_string(current_->files_[1][i]->segments.size()) + "\n");
+    s.append("each segment info:\n");
+    const auto& segs = current_->files_[1][i]->segments;
+    for(int j=0; j < segs.size(); j++) {
+      // s.append("seg_num: %d, file_num:")
+      s.append("seg_num:" + std::to_string(segs[j]->seg_number) + "file_num:" + std::to_string(segs[j]->file_number) + "seg_size:" + std::to_string(segs[j]->seg_size) + "\n");
+    }
+    // printf("%s\n", s.data());
+  }
+  return s.data();
 }
 
 const char* VersionSet::LevelSummary(LevelSummaryStorage* scratch) const {
@@ -1626,6 +1652,10 @@ void VersionSet::SetupTableIntervals(std::vector<TableInterval*>& tmp_intervals,
   left->DecodeFrom(input.back()->largest.Encode());
   tmp_intervals.push_back(new TableInterval( left, nullptr ));
 }
+
+// void VersionSet::Evict(uint64_t seg_num) {
+//   table_cache_nvm_->Evict(seg_num);
+// }
 
 // the compaction must happen at level1 
 Status VersionSet::MakeNewFiles(Compaction* compact, std::vector<LevelOutput>& res,port::Mutex* mu) {
