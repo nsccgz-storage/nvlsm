@@ -196,22 +196,29 @@ struct LevelOutput{
 
 // (], (], ... , (]
 struct TableInterval {
-  TableInterval(InternalKey* left, InternalKey* right,
-       InternalKey *real_left=nullptr,
-       InternalKey *real_right=nullptr) 
-      :left_bound(left),
-      right_bound(right),
-      total_size(0) {
+  TableInterval(const Slice* left, const Slice* right,
+       const Slice*real_left=nullptr,
+       const Slice *real_right=nullptr) 
+      : total_size(0) {
+    left_bound = right_bound = nullptr;
     real_left_bound = nullptr;
     real_right_bound = nullptr;
+    if(left && !left->empty()) {
+      left_bound = new InternalKey();
+      left_bound->DecodeFrom(*left);
+    }
 
+    if(right && !right->empty()) {
+      right_bound = new InternalKey();
+      right_bound->DecodeFrom(*right);
+    }
     if(real_left != nullptr) {
       real_left_bound = new InternalKey();
-      real_left_bound->DecodeFrom(real_left->Encode());
+      real_left_bound->DecodeFrom(*real_left);
     }
     if(real_right != nullptr) {
       real_right_bound = new InternalKey();
-      real_right_bound->DecodeFrom(real_right->Encode());
+      real_right_bound->DecodeFrom(*real_right);
     }
   }
   ~TableInterval() {
@@ -395,7 +402,7 @@ class VersionSet {
                             std::vector<TableInterval*>& table_intervals,
                             port::Mutex* mu);
 
-  void SetupTableIntervals(std::vector<TableInterval*>& intervals,  const std::vector<FileMetaData*> &input);
+  void SetupTableIntervals(std::vector<TableInterval*>& intervals,  const std::vector<FileMetaData*> &input, port::Mutex* mu, bool is_split);
 
   // Iterator* NewSegKeyIterator(SegmentMeta* seg);
 

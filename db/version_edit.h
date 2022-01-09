@@ -48,7 +48,19 @@ struct SegmentMeta {
   }
   // std::vector<KeyMetaData*> key_metas;
 
-  
+  SegmentMeta(uint64_t d_offset, uint64_t d_size, uint64_t k_offset, uint64_t k_size,
+              uint64_t f_num, uint64_t s_num,  const Slice& small,  const Slice& large)
+              : refs(0),
+                data_offset(d_offset),
+                data_size(d_size),
+                key_offset(k_offset),
+                key_size(k_size),
+                file_number(f_num),
+                seg_number(s_num),
+                seg_size(d_size + k_size) {
+    smallest.DecodeFrom(small);
+    largest.DecodeFrom(large);
+  }
 };
 
 

@@ -1,7 +1,11 @@
-#include <db/filename.h>
-#include <table_nvm/table_cache_nvm.h>
-#include <db/version_edit.h>
-#include <leveldb/env.h>
+#include <cstdio>
+#include <stdint.h>
+#include "db/filename.h"
+#include "db/version_edit.h"
+#include "table_nvm/table_cache_nvm.h"
+#include "leveldb/env.h"
+#include "util/coding.h"
+#include "port/port.h"
 
 
 namespace leveldb {
@@ -76,7 +80,34 @@ Status TableCacheNVM::Get(const ReadOptions& options,const FileMetaData* file_me
     TableNVM* t = t_segs->table;
     s = t->InternalGet(options, k, arg, handle_result);
     table_cache_->Release(handle);
-  } 
+
+    const InternalKeyComparator* icmp = reinterpret_cast<const InternalKeyComparator*>(options_.comparator);
+    const Comparator* ucmp = icmp->user_comparator();
+    std::vector<SegmentMeta*> tmp;
+    tmp.reserve(file_meta->segments.size());
+    for(int i = file_meta->segments.size()-1; i >= 0; i--) {
+      // if(options_.comparator->Compare)
+      InternalKey ikey;
+      ikey.DecodeFrom(k);
+      Slice user_key = ikey.user_key();
+      if(ucmp->Compare(user_key, file_meta->segments[i]->smallest.user_key()) >= 0 && ucmp->Compare(user_key, file_meta->segments[i]->largest.user_key()) <= 0) {
+        Cache::Handle* seg_handle = nullptr;
+        s = FindSegment(file_meta->segments[i], &seg_handle);
+        if(!s.ok()) {
+          printf("table cache get find segment not ok\n");
+        }
+        Segment* seg = reinterpret_cast<SegmentAndFileHandle*>(seg_cache_->Value(seg_handle))->seg;
+        s = seg->InternalGet(options, k, arg, handle_result);
+        seg_cache_->Release(seg_handle);
+        if(s.ok()) {
+          return s;
+        }
+
+      }
+    } 
+  } else {
+  }
+ 
   return s; 
 }
 
@@ -143,6 +174,21 @@ void TableCacheNVM::Evict( CacheType type, uint64_t number){
     EncodeFixed64(buf+1, number);
     Slice key(buf, sizeof(buf));
     table_cache_->Erase(key);
+}
+
+
+
+Status TableCacheNVM::GetMidKeys(const FileMetaData* f, std::vector<SegSepKeyData> & left, std::vector<SegSepKeyData>& right) {
+  Cache::Handle* handle = nullptr;
+  Status s = FindTableNVM(f, &handle);
+  if(!s.ok()) {
+    printf("GetMidKeys find table not ok\n");
+    return s;
+  }
+  TableNVM* table = reinterpret_cast<TableAndSegHandles*>(table_cache_->Value(handle))->table;
+
+  table->GetMidKeyDataOffset(left, right);
+  return s;
 }
 
 

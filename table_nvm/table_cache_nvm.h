@@ -22,7 +22,7 @@ public:
     ~TableCacheNVM();
 
 
-    Iterator* NewIterator(const ReadOptions& options,const FileMetaData* file_meta,
+    Iterator* NewIterator(const ReadOptions& options, const FileMetaData* file_meta,
                             TableNVM** tableptr = nullptr);
 
     Status Get(const ReadOptions& options, const FileMetaData* file_meta,
@@ -33,7 +33,7 @@ public:
 
     void Evict(CacheType type, uint64_t file_number);
 
-
+    Status GetMidKeys(const FileMetaData* f, std::vector<SegSepKeyData> & left, std::vector<SegSepKeyData>& right);
 private:
     // maybe we can move findTable to public, since tablebulder need to index data 
     // of the table.

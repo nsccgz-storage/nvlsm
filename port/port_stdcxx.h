@@ -41,6 +41,8 @@
 namespace leveldb {
 namespace port {
 
+const size_t kMaxSizet = std::numeric_limits<size_t>::max();
+
 class CondVar;
 
 // Thinly wraps std::mutex.

@@ -40,13 +40,23 @@ static int64_t ExpandedCompactionByteSizeLimit(const Options* options) {
   return 25 * TargetFileSize(options);
 }
 
+static uint64_t MaxFileSize(const std::vector<FileMetaData*>& files) {
+  uint64_t max_file_size= 0;
+  for(int i=0; i < files.size(); i++) {
+    if(files[i]->file_size > max_file_size ) {
+      max_file_size = files[i]->file_size;
+    }
+  }
+  return max_file_size;
+}
+
 static double MaxBytesForLevel(const Options* options, int level) {
   // Note: the result for level zero is not really used since we set
   // the level-0 compaction threshold based on number of files.
   double result = 10. * 1048576.0;
-  // if(level == 1) {
-  //   // return result * 10.;
-  // }
+  if(level == 1) {
+    return result * 10.;
+  }
 
   // Result for both level-0 and level-1
   while (level > 1) {
@@ -1170,23 +1180,31 @@ void VersionSet::Finalize(Version* v) {
       // overwrites/deletions).
       score = v->files_[level].size() /
               static_cast<double>(config::kL0_CompactionTrigger);
-    } else {
+    } 
+     else {
       // Compute the ratio of current size to size limit.
       const uint64_t level_bytes = TotalFileSize(v->files_[level]);
       score =
           static_cast<double>(level_bytes) / MaxBytesForLevel(options_, level);
     }
-#ifdef DEBUG
-    printf("level:%d, score:%f\n", level, score);
-#endif
+    if(level == 1) {
+      const uint64_t max_file_bytes = MaxFileSize(v->files_[level]);
+      double level1_score = static_cast<double>(max_file_bytes) / config::kL1_MaxSegBytes;
+      if(level1_score > score) {
+        score = level1_score;
+      }
+    }
+// #ifdef NDEBUG
+    // printf("level:%d, score:%f\n", level, score);
+// #endif
     if (score > best_score) {
       best_level = level;
       best_score = score;
     }
   }
-#ifdef DEBUG
-  printf("compaction level:%d, compaction score:%f\n", best_level, best_score);
-#endif
+// #ifdef NDEBUG
+  // printf("compaction level:%d, compaction score:%f\n", best_level, best_score);
+// #endif
   v->compaction_level_ = best_level;
   v->compaction_score_ = best_score;
 }
@@ -1440,17 +1458,29 @@ Compaction* VersionSet::PickCompaction() {
     Log(options_->info_log, msg.data());
     c = new Compaction(options_, level);
 
-    // Pick the first file that comes after compact_pointer_[level]
-    for (size_t i = 0; i < current_->files_[level].size(); i++) {
-      FileMetaData* f = current_->files_[level][i];
-      // SSTableMeta* f = current_->files_[level][i];
-      // SSTableMeta* t = current_->tables_[level][i];
-      if (compact_pointer_[level].empty() ||
-          icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
-        c->inputs_[0].push_back(f);
-        break;
+    if(level == 1) {
+      int file_idx = 0;
+      uint64_t max_file_size = 0;
+      for(int i=0; i < current_->files_[level].size(); i++) {
+        FileMetaData* f = current_->files_[level][i];
+        if(f->file_size > max_file_size) {
+          file_idx = i;
+          max_file_size = f->file_size;
+        }
+      }
+      c->inputs_[0].push_back(current_->files_[level][file_idx]);
+    } else {
+      // Pick the first file that comes after compact_pointer_[level]
+      for (size_t i = 0; i < current_->files_[level].size(); i++) {
+        FileMetaData* f = current_->files_[level][i];
+        if (compact_pointer_[level].empty() ||
+            icmp_.Compare(f->largest.Encode(), compact_pointer_[level]) > 0) {
+          c->inputs_[0].push_back(f);
+          break;
+        }
       }
     }
+    
     if (c->inputs_[0].empty()) {
       // Wrap-around to the beginning of the key space
       c->inputs_[0].push_back(current_->files_[level][0]);
@@ -1619,43 +1649,194 @@ void AddBoundaryInputs(const InternalKeyComparator& icmp,
   }
 }
 
+// void DoTableSplit(const FileMetaData* f, std::vector<>)
+
 // create TableIntervals from input for new segments to be appended to 
-void VersionSet::SetupTableIntervals(std::vector<TableInterval*>& tmp_intervals, const std::vector<FileMetaData*> &input ) {
+void VersionSet::SetupTableIntervals(std::vector<TableInterval*>& tmp_intervals, 
+                            const std::vector<FileMetaData*> &input, port::Mutex* mu, bool split) {
+  assert(!input.empty());
+  int max_idx = 0;
+  uint64_t max_file_size = 0;
+  for(int i=0; i < input.size(); i++) {
+    if(input[i]->file_size > max_file_size) {
+      max_idx = i;
+      max_file_size = input[i]->file_size;
+    }
+  }
+  // we nned to do the segments split here 
+  // we also need boundry key of split segment  [left_key, right_key]
   for(int i=0; i< input.size(); i++) {
-    InternalKey* left1 = nullptr;
-    InternalKey *right1= nullptr;
-    InternalKey* left2 = nullptr;
-    InternalKey* right2 = nullptr;
+    // InternalKey* left1 = nullptr;
+    // InternalKey *right1= nullptr;
+    // InternalKey* left2 = nullptr;
+    // InternalKey* right2 = nullptr;
+    Slice left1;
+    Slice right1;
+    Slice left2;
+    Slice right2;
     if(i != 0) {
       // left = new InternalKey(tmp_intervals.back().right_bound);
-      left1 = new InternalKey();
-      left1->DecodeFrom(tmp_intervals.back()->right_bound->Encode());
+      // left1 = new InternalKey();
+      // left1->DecodeFrom(tmp_intervals.back()->right_bound->Encode());
+      left1 = Slice(tmp_intervals.back()->right_bound->Encode());
     }
 
-    right1 = new InternalKey();
-    right1->DecodeFrom(input[i]->smallest.Encode()); 
+    // right1 = new InternalKey();
+    // right1->DecodeFrom(input[i]->smallest.Encode()); 
+    right1 = Slice(input[i]->smallest.Encode());
 
-    left2 = new InternalKey();
-    left2->DecodeFrom(input[i]->smallest.Encode());
+    // left2 = new InternalKey();
+    // left2->DecodeFrom(input[i]->smallest.Encode());
+    left2 = Slice(input[i]->smallest.Encode());
 
-    right2 = new InternalKey();
-    right2->DecodeFrom(input[i]->largest.Encode());
-    // tmp_intervals.push_back(TableInterval{true, left1, right1 });
-    // tmp_intervals.push_back(TableInterval(false, left2, right2, input[i]->number));
-    tmp_intervals.push_back(new TableInterval(left1, right1));
-    tmp_intervals.push_back(new TableInterval(left2, right2, left2, right2));
-    // segment->ref++?
-    tmp_intervals.back()->segments = (input[i]->segments);
-    tmp_intervals.back()->total_size = input[i]->file_size;
+    // right2 = new InternalKey();
+    // right2->DecodeFrom(input[i]->largest.Encode());
+    right2 = Slice(input[i]->largest.Encode());
+
+
+    if(i == max_idx ) {
+      // printf("split value is %d\n", split);
+      // what if there is only one kv in the the segment ?
+      // we will do a empty check, if it is empty then we will not add another interval.
+      
+      // [key, key_data_offset] the second one is possibly empty
+      // left_table store upper bound of left part of split table
+      // right_table stores lower bound of right part of split table
+      const FileMetaData* f = input[i];
+      int seg_count = f->segments.size();
+      // std::vector<std::pair<Slice, Slice> > left_table(seg_count);
+      // std::vector<std::pair<Slice, Slice> > right_table(seg_count);
+      std::vector<SegSepKeyData> left_table(seg_count);
+      std::vector<SegSepKeyData> right_table(seg_count);
+
+      Status s = table_cache_nvm_->GetMidKeys(f, left_table, right_table);
+      // if new split table is empty then don't push any new interval, or if some segments is empty, we dont' put that 
+      // segments in the newly generated table either.
+      // we need to be carefule about the total size of the new segments 
+      uint64_t left_total_size = 0;
+      uint64_t right_total_size = 0;
+      bool right_empty = true;
+      std::vector<SegmentMeta*> left_seg_metas;
+      std::vector<SegmentMeta*> right_seg_metas;
+      Slice left_max_key;
+      Slice right_min_key;
+      // buid left table and right table of the split table
+      for(int seg_idx=0; seg_idx < f->segments.size(); seg_idx++) {
+        // we will create new segments here
+        Slice cur_seg_left_key = left_table[seg_idx].key;
+        const SegmentMeta* old_seg = f->segments[seg_idx];
+        uint64_t left_key_size = 0;
+        uint64_t left_data_size = 0;
+        uint64_t cur_left_seg_size = 0;
+        uint64_t cur_right_seg_size = 0;
+
+
+        uint64_t end_key_offset = old_seg->key_offset + old_seg->key_size;
+        uint64_t end_data_offset = old_seg->data_offset + old_seg->data_size;
+        if(!cur_seg_left_key.empty()) {
+          uint64_t left_key_offset, left_data_offset; 
+          DecodeMetaVals(left_table[seg_idx].key_data_offset, &left_key_offset, &left_data_offset);
+
+          left_key_size = left_table[seg_idx].next_key_offset - old_seg->key_offset;
+          left_data_size = left_table[seg_idx].next_data_offset - old_seg->data_offset;
+          cur_left_seg_size = left_key_size + left_data_size;
+          left_total_size +=  cur_left_seg_size ;
+          Slice left_seg_max_key = left_table[seg_idx].key;
+          // assert(!left_seg_max_key.empty());
+          mu->Lock();
+          uint64_t new_seg_num = NewSegNumber();
+          mu->Unlock();
+          SegmentMeta* left_seg = new SegmentMeta(old_seg->data_offset, left_data_size, old_seg->key_offset, left_key_size, old_seg->file_number, new_seg_num, old_seg->smallest.Encode(), left_seg_max_key);
+          assert(icmp_.Compare(old_seg->smallest.Encode(), left_seg_max_key) <= 0);
+          left_seg_metas.push_back(left_seg);
+
+          if(left_max_key.empty() || icmp_.Compare(left_seg_max_key, left_max_key) > 0) {
+            left_max_key = left_seg_max_key;
+          }
+        }
+
+
+        // key not empty means there is elements in the 
+        // right part of the segment
+        uint64_t right_key_size = 0;
+        uint64_t right_data_size = 0;
+        Slice right_seg_min_key = right_table[seg_idx].key;
+        if(!right_seg_min_key.empty()) {
+          right_empty = false;
+          uint64_t right_key_offset;
+          uint64_t right_data_offset;
+          DecodeMetaVals(right_table[seg_idx].key_data_offset, &right_key_offset, &right_data_offset);
+          right_key_size = old_seg->key_size - left_key_size;
+          right_data_size = old_seg->data_size - left_data_size; 
+          // uint64_t right_key_size = end_
+          cur_right_seg_size = right_key_size + right_data_size;
+          right_total_size += cur_right_seg_size;
+
+          mu->Lock();
+          uint64_t new_seg_num = NewSegNumber();
+          mu->Unlock();
+          SegmentMeta* right_seg = new SegmentMeta(right_data_offset, right_data_size, right_key_offset, right_key_size, old_seg->file_number, new_seg_num, right_seg_min_key, old_seg->largest.Encode());
+          assert(icmp_.Compare(right_seg_min_key, old_seg->largest.Encode()) <= 0);
+          right_seg_metas.push_back(right_seg);
+          if(right_min_key.empty() || icmp_.Compare(right_seg_min_key, right_min_key) < 0) {
+            right_min_key = right_seg_min_key;
+          }
+          assert(right_key_offset + right_key_size == end_key_offset);
+          
+        } else {
+          assert(left_key_size == old_seg->key_size);
+        }
+        // assert(cur_left_seg_size + cur_right_seg_size == f->segments[seg_idx]->seg_size);
+        // assert(right_key_size + left_key_size == old_seg->key_size);
+        // assert(right_data_size + left_data_size == old_seg->data_size);
+      }
+
+      // assert(left_total_size + right_total_size == f->file_size);
+
+      tmp_intervals.push_back(new TableInterval(&left1, &right1));
+      // tmp_intervals.push_back(new TableInterval(&left2, &left_max_key, &left2, &left_max_key));
+      // we merge middle empty part to the left since it is small range space.
+      Slice left_seg_right_bound ;
+      if(right_empty) {
+        left_seg_right_bound = right2;
+      } else {
+        left_seg_right_bound = right_min_key;
+      }
+      tmp_intervals.push_back(new TableInterval(&left2, &left_seg_right_bound, &left2, &left_max_key));
+      tmp_intervals.back()->segments = left_seg_metas;
+      tmp_intervals.back()->total_size = left_total_size;
+      if(!right_empty) {
+        // tmp_intervals.push_back(new TableInterval(&left_max_key, &right_min_key));
+        tmp_intervals.push_back(new TableInterval(&right_min_key, &right2, &right_min_key, &right2));
+        tmp_intervals.back()->segments = right_seg_metas;
+        tmp_intervals.back()->total_size = right_total_size;
+      } else {
+        assert(left_max_key.compare(right2) == 0);
+      }
+      if(!left_max_key.empty() && !right_min_key.empty()){
+        assert(icmp_.Compare(left_max_key, right_min_key) < 0);
+      }
+    } else  {
+
+      // tmp_intervals.push_back(new TableInterval(&left1, &right1));
+      // tmp_intervals.push_back(new TableInterval(&left2, &right2, &left2, &right2));
+      tmp_intervals.push_back(new TableInterval(&left1, &right2,&left2, &right2));
+      // segment->ref++?
+      tmp_intervals.back()->segments = (input[i]->segments);
+      tmp_intervals.back()->total_size = input[i]->file_size;
+    } 
+    
   }
-  InternalKey * left=  new InternalKey();
-  left->DecodeFrom(input.back()->largest.Encode());
-  tmp_intervals.push_back(new TableInterval( left, nullptr ));
+  // InternalKey * left=  new InternalKey();
+  // left->DecodeFrom(input.back()->largest.Encode());
+  Slice left(input.back()->largest.Encode());
+  tmp_intervals.push_back(new TableInterval(&left, nullptr ));
+
+  for(int i=1; i < tmp_intervals.size(); i++) {
+    assert(icmp_.Compare(*(tmp_intervals[i]->left_bound), *(tmp_intervals[i-1]->right_bound))  >= 0);
+  }
 }
 
-// void VersionSet::Evict(uint64_t seg_num) {
-//   table_cache_nvm_->Evict(seg_num);
-// }
 
 // the compaction must happen at level1 
 Status VersionSet::MakeNewFiles(Compaction* compact, std::vector<LevelOutput>& res,port::Mutex* mu) {
@@ -1675,7 +1856,6 @@ Status VersionSet::MakeNewFiles(Compaction* compact, std::vector<LevelOutput>& r
   }
   std::vector<FileMetaData*> inputs1 = (compact->inputs_[1]);
 
-
   // todo: 
   // if the size of inputs1 < preset Table limit
   // then we will double that table interval to add more internvals
@@ -1685,19 +1865,14 @@ Status VersionSet::MakeNewFiles(Compaction* compact, std::vector<LevelOutput>& r
     FileMetaData* inputs0_oldest = inputs0.back();
     inputs0.pop_back();
     inputs1.push_back(inputs0_oldest);
-
   } 
 
-
-  SetupTableIntervals(tmp_intervals, inputs1  );
+  bool is_split = true;
+  if(current_->files_[1].size() >= config::kL1_StopSplitTrigger) {
+    is_split = false;
+  }
+  SetupTableIntervals(tmp_intervals, inputs1, mu, is_split);
   
-  // it's possible there may no be overlapping sstables in level i+1
-  // so now what do we do?
-  // we need to insert new sstables meta to files_[level i+1]
-  // [1-10][][10-15][17-30]
-
-  // or [1-10]<10-20>[20-50]<50-60>[60-80]
-
   // there is optimizaiton we can do, but for now,
   // I just pick the simplest solution 
   for(int i= inputs0.size()-1 ; i >= 0; i--) {
@@ -1815,6 +1990,7 @@ Status VersionSet::SplitFileForInputs(const SegmentMeta* seg, Iterator* seg_key_
     uint64_t cur_key_offset; 
     uint64_t key_data_offset;
     if(end) {
+      // this is true because key part and data part is continuous
       cur_key_offset = seg->seg_size;
       key_data_offset = seg->data_size;
     } else {
@@ -1850,6 +2026,15 @@ Status VersionSet::SplitFileForInputs(const SegmentMeta* seg, Iterator* seg_key_
         }
         base_smallest->DecodeFrom(prev_key.Encode());
       }
+      if(base_files_idx > 0) {
+        if(base_files[base_files_idx-1]->real_right_bound) {
+          assert(icmp_.Compare(base_smallest->Encode(), base_files[base_files_idx-1]->real_right_bound->Encode()) > 0);
+
+        }
+
+
+        assert(icmp_.Compare(base_smallest->Encode(), base_files[base_files_idx-1]->right_bound->Encode()) >= 0);
+      }
 
       InternalKey* &base_file_largest = base_files[base_files_idx]->real_right_bound;
       if(base_file_largest == nullptr|| icmp_.Compare(*base_file_largest, seg_largest_key) < 0) {
@@ -1857,6 +2042,13 @@ Status VersionSet::SplitFileForInputs(const SegmentMeta* seg, Iterator* seg_key_
           base_file_largest = new InternalKey();
         }
         base_file_largest->DecodeFrom(seg_largest_key.Encode());
+      }
+      if(base_files_idx < base_files.size() -1) {
+        if(base_files[base_files_idx+1]->real_left_bound) {
+          assert(icmp_.Compare(base_file_largest->Encode(), base_files[base_files_idx+1]->real_left_bound->Encode()) < 0);
+        }
+
+        assert(icmp_.Compare(base_files[base_files_idx+1]->left_bound->Encode(), base_file_largest->Encode()) >= 0);
       }
     } 
 

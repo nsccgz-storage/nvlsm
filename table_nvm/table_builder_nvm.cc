@@ -79,8 +79,8 @@ Status BuildTableNVM(const std::string& dbname, Env* env, const Options& options
 
     if(s.ok() && meta->file_size > 0) {
         Log(options.info_log, "Build L0 Table success, file_num:%ld, file size:%ld ",meta->number ,meta->file_size);
-        Iterator* it = table_cache->NewIterator(ReadOptions(), meta, nullptr);
-        delete it;
+        // Iterator* it = table_cache->NewIterator(ReadOptions(), meta, nullptr);
+        // delete it;
     } else {
         printf("build l0 table failed\n");
         // RemoveNVMFile(fname);

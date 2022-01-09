@@ -1,4 +1,6 @@
 #include <string>
+#include <stdint.h>
+#include <vector>
 // #include <libpmemobj++/make_persistent.hpp>
 // #include <libpmemobj++/p.hpp>
 // #include <libpmemobj++/persistent_ptr.hpp>
@@ -11,6 +13,7 @@
 #include "db/filename.h"
 #include "table/merger.h"
 #include "table_nvm.h"
+#include "util/coding.h"
 
 
 
@@ -355,10 +358,99 @@ std::vector<Iterator*> TableNVM::NewIndexIterator() const{
 
 
     
+static inline void DecodeMetaVals(Slice& val, uint64_t *key_offset, uint64_t *key_data_offset) {
+  *key_offset = DecodeFixed64(val.data()); 
+  *key_data_offset = DecodeFixed64(val.data()+8) ;  
+}
+
+
+void TableNVM::GetMidKeyDataOffset(std::vector<SegSepKeyData>&left, std::vector<SegSepKeyData>& right) const{
+  segs_[0]->GetMidKeys(left[0], right[0]);
+  Slice first_left_key = left[0].key;
+  for(int i=1; i < segs_.size(); i++) {
+      segs_[i]->SearchForMidKeys(first_left_key, left[i], right[i]);
+  } 
+}
+
+
+void Segment::SearchForMidKeys(Slice& key, SegSepKeyData& left, SegSepKeyData& right) const {
+    ReadOptions options;
+    Iterator* seg_iter = NewIndexIterator(options);
+    seg_iter->Seek(key) ;
+    // seg_key is the one that is lower bound of key
+    
+    uint64_t end_key_offset = seg_rep_->key_offset + seg_rep_->key_size;
+    uint64_t end_data_offset = seg_rep_->data_offset + seg_rep_->data_size;
+    if(!seg_iter->Valid()) {
+        // this means all keys of this segment are smaller than first_left_key
+        seg_iter->SeekToLast(); 
+        Slice seg_key = seg_iter->key();
+        Slice seg_key_data_offset = seg_iter->value();
+        // put to left 
+        left.key = seg_key;
+        left.key_data_offset = seg_key_data_offset;
+        left.next_key_offset = end_key_offset;
+        left.next_data_offset = end_data_offset;
+        // there is not right part
+    } else {
+        // there may be no left part,
+        // maybe there is no left part or we can set the first key of the segment to be in the left
+        Slice right_key = seg_iter->key();
+        Slice right_key_data_offset = seg_iter->value();
+        right.key = right_key;
+        right.key_data_offset = right_key_data_offset;
+        seg_iter->Next();
+        if(seg_iter->Valid()) {
+            Slice right_next_key_data_offset = seg_iter->value();
+            DecodeMetaVals(right_next_key_data_offset, &right.next_key_offset, &right.next_data_offset);
+            seg_iter->Prev();
+        } else {
+            right.next_key_offset = end_key_offset;
+            right.next_data_offset = end_data_offset;
+            seg_iter->SeekToLast();
+        }
+
+        seg_iter->Prev();
+        if(!seg_iter->Valid()) {
+            // left has no key 
+        } else {
+            left.key = seg_iter->key();
+            left.key_data_offset = seg_iter->value();
+            DecodeMetaVals(right_key_data_offset, &left.next_key_offset, &left.next_data_offset);
+        }
+    }
+}
 
 
 
 
+void Segment::GetMidKeys(SegSepKeyData& left, SegSepKeyData& right) const {
+    int len = seg_rep_->key_metas.size();
+    int left_mid = (len-1)/ 2;
+    int right_mid = left_mid + 1;
+
+    uint64_t end_key_offset = seg_rep_->key_offset + seg_rep_->key_size;
+    uint64_t end_data_offset = seg_rep_->data_offset + seg_rep_->data_size;
+    KeyMetaData* left_key_meta = seg_rep_->key_metas[left_mid];
+    left.key = left_key_meta->key;
+    left.key_data_offset = left_key_meta->key_data_offset;
+    if(right_mid >= seg_rep_->key_metas.size()) {
+        left.next_key_offset = end_key_offset;
+        left.next_data_offset = end_data_offset;
+    } else {
+        right.key = seg_rep_->key_metas[right_mid]->key;
+        right.key_data_offset = seg_rep_->key_metas[right_mid]->key_data_offset;
+        DecodeMetaVals(seg_rep_->key_metas[right_mid]->key_data_offset, &left.next_key_offset, &left.next_data_offset);
+
+        int right_mid_next = right_mid + 1;
+        if(right_mid_next >= seg_rep_->key_metas.size()) {
+            right.next_key_offset = end_key_offset;
+            right.next_data_offset = end_data_offset;
+        } else {
+            DecodeMetaVals(seg_rep_->key_metas[right_mid_next]->key_data_offset, &right.next_key_offset, &right.next_data_offset);
+        }
+    }
+}
 
 
 Iterator *TableNVM::NewIterator(const ReadOptions& read_options) const {
@@ -371,21 +463,36 @@ Iterator *TableNVM::NewIterator(const ReadOptions& read_options) const {
 
 }
 
+Status Segment::InternalGet(const ReadOptions& options, const Slice& k, void *arg,
+                    void (*handle_result)(void*, const Slice&,
+                                                    const Slice&)) {
+    Iterator* iter = NewIterator(options);
+    iter->Seek(k);
+    if(iter->Valid()) {
+        (*handle_result)(arg, iter->key(), iter->value());
+        return Status::OK();
+    } else {
+        return Status::NotFound("");
+    }
 
+}
 
 
 Status TableNVM::InternalGet(const ReadOptions& options, const Slice& k, void *arg,
                     void (*handle_result)(void*, const Slice&,
                                                     const Slice&)) {
     Status s;
-    Iterator* iter = NewIterator(options) ;
-    iter->Seek(k);
-    if(iter->Valid()) {
-        (*handle_result)(arg, iter->key(), iter->value());
-    }
+    // for(int i=segs_.size()-1; i >= 0; i--) {
+    //     if()
+    // }
+    // Iterator* iter = NewIterator(options) ;
+    // iter->Seek(k);
+    // if(iter->Valid()) {
+    //     (*handle_result)(arg, iter->key(), iter->value());
+    // }
 
-    s = iter->status();
-    delete iter;
+    // s = iter->status();
+    // delete iter;
     return s;
 }
 
@@ -448,6 +555,9 @@ Status Segment::Open(const Options& options, RandomAccessFile* file, uint64_t da
     // s = key_file->Read(0, key_size, &key_contens, key_buf);
     s = file->Read(key_offset, key_size, &key_contens, key_buf);
     const char* key_data = key_contens.data();
+    if(!s.ok()) {
+        printf("file read not ok %s\n", s.ToString());
+    }
     assert(key_contens.size() == key_size);
     if(key_data != key_buf) {
         delete[] key_buf;

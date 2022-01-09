@@ -1,3 +1,6 @@
+TableNVM
+- change key_offset and key_data_offset from uint64_t to uint32_t
+- store keys of segments in DRAM? for fast read?
 ss
 - Stats
 

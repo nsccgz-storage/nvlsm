@@ -41,6 +41,17 @@ struct KeyMetaData {
   // uint64_t total_size; // key_size + sizeof(key) + val_size + sizeof(val)
 };
 
+struct SegSepKeyData {
+  // if null, then key and key_data_offset is empty
+  Slice key;
+  Slice key_data_offset;
+  // we use uint64_t since current key may be the last key in the segment 
+  // in this case we set next_key_offset to the size of cur segment, similar 
+  // for next_data_offset
+  uint64_t next_key_offset;
+  uint64_t next_data_offset;
+};
+
 class Segment {
 public:
   
@@ -55,10 +66,16 @@ public:
   Iterator* NewIterator(const ReadOptions&) const;
   Iterator* NewIndexIterator(const ReadOptions&) const;
 
-  
+  void GetMidKeys(SegSepKeyData& left, SegSepKeyData& right) const;
+
+  void SearchForMidKeys(Slice& mid_key, SegSepKeyData& left, SegSepKeyData& right) const;
+
+  Status InternalGet(const ReadOptions& options, const Slice& k, void *arg,
+                        void (*handle_result)(void*, const Slice&, const Slice&));
 private:
   struct SegRep;
   friend class TableCacheNVM;
+  friend class TableNVM;
   explicit Segment(SegRep* seg_rep): seg_rep_(seg_rep) {
     //seg_rep_ = seg_rep;
   }
@@ -94,7 +111,8 @@ public:
   std::vector<Iterator*> NewIndexIterator() const;
   uint64_t ApproximateOffsetOf(const Slice& key) const;
 
-
+  // mid key offset, mid data offset
+  void GetMidKeyDataOffset(std::vector<SegSepKeyData>&left, std::vector<SegSepKeyData>& right) const;
 private:
     friend class TableBuilderNVMLevel;
 
