@@ -1466,11 +1466,12 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   }
   if (status.ok() && compact->builder != nullptr) {
     status = FinishCompactionOutputFile(compact, input);
-  } else {
-    printf("before finish already status not ok\n");
-  }
+  } 
+
   if (status.ok()) {
     status = input->status();
+  } else {
+    printf(" compaction status not ok, status:%s\n", status.ToString().data());
   }
   delete input;
   input = nullptr;
@@ -1944,6 +1945,7 @@ DB::~DB() = default;
 Status DB::Open(const Options& options, const std::string& dbname, DB** dbptr) {
   *dbptr = nullptr;
 
+  printf("this is nvlsm\n");
   DBImpl* impl = new DBImpl(options, dbname);
   impl->mutex_.Lock();
   VersionEdit edit;

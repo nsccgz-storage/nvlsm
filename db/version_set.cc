@@ -1791,7 +1791,7 @@ void VersionSet::SetupTableIntervals(std::vector<TableInterval*>& tmp_intervals,
         // assert(right_data_size + left_data_size == old_seg->data_size);
       }
 
-      // assert(left_total_size + right_total_size == f->file_size);
+      assert(left_total_size + right_total_size == f->file_size);
 
       tmp_intervals.push_back(new TableInterval(&left1, &right1));
       // tmp_intervals.push_back(new TableInterval(&left2, &left_max_key, &left2, &left_max_key));

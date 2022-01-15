@@ -1,23 +1,25 @@
 #!/bin/bash
 
 EXEC_PATHS=( "~/bily/leveldb_hdd/leveldb/build/db_bench" "~/bily/leveldb/build/db_bench"  "~/bily/nvlsm/build/db_bench")
+# "~/bily/leveldb/build/db_bench"
+
 LOG_STORE_PATH="~/bily/leveldb_log"
-#LOG_STORE_PATHS=("~/bily/leveldb_log" "~/bily/leveldb_nvm")
-LOG_DIR_NAMES=("leveldb_log" "leveldb_nvm_log" "nvlsm_log")
-MODEL_NAME="nvlsm"
+LOG_DIR_NAMES=("leveldb_log" "leveldb_nvm_log"  "nvlsm_log")
+# "leveldb_nvm_log"
 
 DB_DIR_PAIRS=(
 "HDD            /mnt/hdd2/leveldb" 
 "NVMeSSD            /mnt/nvme_ssd/leveldb"  
-"PMEM          /mnt/pmem/leveldb"  
+# "PMEM          /mnt/pmem/leveldb"  
 )
 
-DISKS=("HDD" "NVMeSSD" "PMEM")
-DIRS=("/mnt/hdd2/leveldb" "/mnt/nvme_ssd/leveldb" "/mnt/pmem/leveldb")
-for (( i = 0; i < ${#DISKS[@]}; i++)); do
-    echo ${DISKS[$i]} 
-    echo ${DIRS[$i]}
-done
+# DISKS=("HDD" "NVMeSSD" "PMEM")
+# DIRS=("/mnt/hdd2/leveldb" "/mnt/nvme_ssd/leveldb" "/mnt/pmem/leveldb")
+# for (( i = 0; i < ${#DISKS[@]}; i++)); do
+    # echo ${DISKS[$i]} 
+    # echo ${DIRS[$i]}
+    # echo ""
+# done
 
 POSITIONNAL=()
 while [[ $# -gt 0 ]]; do
@@ -51,7 +53,7 @@ for (( i = 0; i < ${#LOG_DIR_NAMES[@]}; i++)); do
     if [ $? -ne 0 ]; then 
         echo "mkdir not ok"
     fi
-    echo "fuck"
+    # echo "fuck"
     model_log_paths+=("${model_log_path}")
 done
 #mkdir -p ${log_dir}
@@ -73,7 +75,7 @@ doOneBenchmarkTest (){
     log_path="${model_log_dir}/${log_file_name}"
     echo ${log_path}
 
-    exec_str="$exec_path --benchmarks=${write_bench_name},overwrite,stats,readseq,readrandom \
+    exec_str="$exec_path --benchmarks=${write_bench_name},overwrite,stats \
              --value_size=${value_size} \
             --db=${db_dir}  \
             --threads=${thread} \
@@ -83,23 +85,28 @@ doOneBenchmarkTest (){
     eval ${exec_str}
 }
 
-value_size=("64" "256" "1024" "4096" "16384") #65536
+value_size=("64"  "256" "1024" "2048" "4096" ) #"16384" #65536
 bench_names=("fillseq" "fillrandom") 
-thread_num=("1" "2")
+thread_num=( "1" ) # "2"
 total_value_size=1073741824
 
-for thread in ${thread_num[*]}; do
 
+for thread in ${thread_num[*]}; do
 
 #for DB_DIR_PAIR in "${DB_DIR_PAIRS[*]}"; do
 for value in ${value_size[@]}; do
 
 
-for (( log_idx = 0; log_idx <${#model_log_paths[@]}; log_idx++ )); do
+# for (( log_idx = 0; log_idx <${#model_log_paths[@]}; log_idx++ )); do
 
-for ((i = 0; i < ${#DISKS[@]}; i++)); do
+# for ((i = 0; i < ${#DISKS[@]}; i++)); do
+for pair in "${DB_DIR_PAIRS[@]}"; do
 
-DB_DIR_P=( "${DISKS[$i]}" "${DIRS[$i]}"  )
+# disk_path_arr=( ${pair} )
+# echo "${disk_path_arr[0]}" "${disk_path_arr[1]}"
+
+# DB_DIR_P=( "${DISKS[$i]}" "${DIRS[$i]}"  )
+DB_DIR_P=( ${pair} )
 
 for bench in ${bench_names[*]}; do
 
@@ -108,9 +115,9 @@ for (( model_idx = 0; model_idx < ${#EXEC_PATHS[@]}; model_idx++)); do
 num_kv=`expr ${total_value_size} / \( 16 + ${value} \)`
 
 echo doOneBenchmarkTest ${DB_DIR_P[0]} ${DB_DIR_P[1]} ${value} ${bench}  ${thread} ${EXEC_PATHS[$model_idx]} ${model_log_paths[$model_idx]} ${num_kv}
-doOneBenchmarkTest ${DB_DIR_P[0]} ${DB_DIR_P[1]} ${value} ${bench}  ${thread} ${EXEC_PATHS[$model_idx]} ${model_log_paths[$log_idx]} ${num_kv}
+doOneBenchmarkTest ${DB_DIR_P[0]} ${DB_DIR_P[1]} ${value} ${bench}  ${thread} ${EXEC_PATHS[$model_idx]} ${model_log_paths[$model_idx]} ${num_kv}
+# done
 
-done
 done
 done
 done
