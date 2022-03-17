@@ -6,3 +6,5 @@
 # Build directory.
 build/
 out/
+clangd_build/
+.cache/

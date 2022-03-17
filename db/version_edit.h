@@ -5,20 +5,19 @@
 #ifndef STORAGE_LEVELDB_DB_VERSION_EDIT_H_
 #define STORAGE_LEVELDB_DB_VERSION_EDIT_H_
 
+#include "db/dbformat.h"
 #include <set>
 #include <utility>
 #include <vector>
 
-#include "db/dbformat.h"
 #include "table_nvm/table_nvm.h"
 
 namespace leveldb {
 
 class VersionSet;
 
-
 struct SegmentMeta {
-  int refs; // there maybe multiple table_nvm which references this segment 
+  int refs;  // there maybe multiple table_nvm which references this segment
   uint64_t data_offset;
   uint64_t data_size;
   uint64_t key_offset;
@@ -27,44 +26,45 @@ struct SegmentMeta {
 
   // uint64_t sstable_number;
 
-  uint64_t file_number; // physical file number to which this segment belongs
-  uint64_t seg_number; // unique id for cache_nvm
+  uint64_t file_number;  // physical file number to which this segment belongs
+  uint64_t seg_number;   // unique id for cache_nvm
 
   InternalKey smallest;
   InternalKey largest;
 
-  SegmentMeta(uint64_t d_offset, uint64_t d_size, uint64_t k_offset, uint64_t k_size,
-              uint64_t f_num, uint64_t s_num,  InternalKey& small,  InternalKey& large)
-              : refs(0),
-                data_offset(d_offset),
-                data_size(d_size),
-                key_offset(k_offset),
-                key_size(k_size),
-                file_number(f_num),
-                seg_number(s_num),
-                seg_size(d_size + k_size) {
+  SegmentMeta(uint64_t d_offset, uint64_t d_size, uint64_t k_offset,
+              uint64_t k_size, uint64_t f_num, uint64_t s_num,
+              InternalKey& small, InternalKey& large)
+      : refs(0),
+        data_offset(d_offset),
+        data_size(d_size),
+        key_offset(k_offset),
+        key_size(k_size),
+        file_number(f_num),
+        seg_number(s_num),
+        seg_size(d_size + k_size) {
     smallest.DecodeFrom(small.Encode());
     largest.DecodeFrom(large.Encode());
   }
   // std::vector<KeyMetaData*> key_metas;
 
-  SegmentMeta(uint64_t d_offset, uint64_t d_size, uint64_t k_offset, uint64_t k_size,
-              uint64_t f_num, uint64_t s_num,  const Slice& small,  const Slice& large)
-              : refs(0),
-                data_offset(d_offset),
-                data_size(d_size),
-                key_offset(k_offset),
-                key_size(k_size),
-                file_number(f_num),
-                seg_number(s_num),
-                seg_size(d_size + k_size) {
+  SegmentMeta(uint64_t d_offset, uint64_t d_size, uint64_t k_offset,
+              uint64_t k_size, uint64_t f_num, uint64_t s_num,
+              const Slice& small, const Slice& large)
+      : refs(0),
+        data_offset(d_offset),
+        data_size(d_size),
+        key_offset(k_offset),
+        key_size(k_size),
+        file_number(f_num),
+        seg_number(s_num),
+        seg_size(d_size + k_size) {
     smallest.DecodeFrom(small);
     largest.DecodeFrom(large);
   }
 };
 
-
-// filemetadata is a logic SSTable that contain multiple 
+// filemetadata is a logic SSTable that contain multiple
 // segments of data whose key lying in the same range
 struct FileMetaData {
   FileMetaData() : refs(0), allowed_seeks(1 << 30), file_size(0) {}
@@ -72,22 +72,21 @@ struct FileMetaData {
     // for(size_t i=0; i < segments.size(); i++) {
     //   delete segments[i];
     // }
-    for(int i=0; i < segments.size(); i++) {
+    for (int i = 0; i < segments.size(); i++) {
       segments[i]->refs--;
-      if(segments[i]->refs == 0) {
+      if (segments[i]->refs == 0) {
         delete segments[i];
       }
-
     }
   }
-  int refs; // there maybe multiple version which references this FileMetaData
-  int allowed_seeks;  // Seeks allowed until compaction
-  uint64_t number;       // sstable number 
+  int refs;  // there maybe multiple version which references this FileMetaData
+  int allowed_seeks;     // Seeks allowed until compaction
+  uint64_t number;       // sstable number
   uint64_t file_size;    // File size in bytes, = total size of all segments
   InternalKey smallest;  // Smallest internal key served by table
   InternalKey largest;   // Largest internal key served by table
 
-  bool is_nvm; // is the sstable on level 0 or on level 1 ?
+  bool is_nvm;  // is the sstable on level 0 or on level 1 ?
   std::vector<SegmentMeta*> segments;
   // uint64_t raw_data_size;
   // uint64_t key_meta_offset;
@@ -95,19 +94,17 @@ struct FileMetaData {
   // uint64_t meta_size;
   // uint64_t meta_index_size;
 
-  // once we open a table, we will read all the meta keys into the rep of the table
-  // this sounds reasonable
+  // once we open a table, we will read all the meta keys into the rep of the
+  // table this sounds reasonable
 };
 
-
-
-// VersionEdit represent an atomic 
+// VersionEdit represent an atomic
 // update of current version
-// a versionEdit includes updating 
+// a versionEdit includes updating
 // next file numebr, last sequence number,
 // and next compact pointers for each level.
 // a version change will also inlucde adding new
-// files and deleting files 
+// files and deleting files
 // Now it make sense to me for why we need such class.
 // great!!
 class VersionEdit {
@@ -173,7 +170,6 @@ class VersionEdit {
     // }
     f.segments = std::move(segments);
     new_files_.push_back(std::make_pair(level, f));
-
   }
 
   // Delete the specified "file" from the specified "level".
@@ -206,9 +202,9 @@ class VersionEdit {
 
   std::vector<std::pair<int, InternalKey>> compact_pointers_;
   // deleted_files is the set of sstable numbers
-  // we want to remove from prev version 
+  // we want to remove from prev version
   DeletedFileSet deleted_files_;
-  // the new sstable numbers we want to add to 
+  // the new sstable numbers we want to add to
   // prev version
   std::vector<std::pair<int, FileMetaData>> new_files_;
 

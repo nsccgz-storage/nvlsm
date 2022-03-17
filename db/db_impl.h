@@ -5,17 +5,18 @@
 #ifndef STORAGE_LEVELDB_DB_DB_IMPL_H_
 #define STORAGE_LEVELDB_DB_DB_IMPL_H_
 
+#include "db/dbformat.h"
+#include "db/log_writer.h"
+#include "db/snapshot.h"
+#include "db/version_set.h"
 #include <atomic>
 #include <deque>
 #include <set>
 #include <string>
 
-#include "db/dbformat.h"
-#include "db/log_writer.h"
-#include "db/snapshot.h"
-#include "db/version_set.h"
 #include "leveldb/db.h"
 #include "leveldb/env.h"
+
 #include "port/port.h"
 #include "port/thread_annotations.h"
 
@@ -26,6 +27,10 @@ class TableCache;
 class Version;
 class VersionEdit;
 class VersionSet;
+class NVMKeyValueMap;
+class NVMKeyValueMapNaive;
+struct SharedState;
+// struct ThreadState;
 
 class DBImpl : public DB {
  public:
@@ -71,10 +76,12 @@ class DBImpl : public DB {
   // Samples are taken approximately once every config::kReadBytesPeriod
   // bytes.
   void RecordReadSample(Slice key);
+  struct ThreadState;
 
  private:
   friend class DB;
   struct CompactionState;
+  struct SuperCompactionState;
   struct CompactionStateNVM;
   struct Writer;
 
@@ -119,8 +126,8 @@ class DBImpl : public DB {
 
   // Delete any unneeded files and stale in-memory entries.
   void RemoveObsoleteFiles() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-    
-//   void RemoveOutdatedTables() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  //   void RemoveOutdatedTables() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   // Compact the in-memory write buffer to disk.  Switches to a new
   // log-file/memtable and writes a new descriptor iff successful.
   // Errors are recorded in bg_error_.
@@ -154,30 +161,37 @@ class DBImpl : public DB {
   void CleanupCompactionNVM(CompactionStateNVM* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-
   Status DoCompactionWork(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  Status DoSplitWork(CompactionStateNVM* compact) 
+  void ProcessKVWork(ThreadState* v) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  Status DoSubCompactionWork(SuperCompactionState* super_state);
+  EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  Status DoSplitWork(CompactionStateNVM* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Status DoLevelCompactionWork(CompactionState* compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-
 
   Status OpenCompactionOutputFile(CompactionState* compact);
   Status FinishCompactionOutputFile(CompactionState* compact, Iterator* input);
   Status FinishSplitCompaction(CompactionStateNVM* compact);
   Status FinishLevelCompaction(CompactionStateNVM* compact);
   Status InstallCompactionResults(CompactionState* compact);
+  EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  Status InstallSubCompactionResult(SuperCompactionState* sup_compact)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  Status InstallCompactionResultsNVM(CompactionState *compact, std::vector<LevelOutput>& new_files)
-    EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status InstallCompactionResultsNVM(CompactionState* compact,
+                                     std::vector<LevelOutput>& new_files)
+      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
-  Status NewSplitCompactionOutput(CompactionStateNVM *compact);
+  Status NewSplitCompactionOutput(CompactionStateNVM* compact);
 
-  Status NewLevelCompactionOutput(CompactionStateNVM *compact);
+  Status NewLevelCompactionOutput(CompactionStateNVM* compact);
 
   const Comparator* user_comparator() const {
     return internal_comparator_.user_comparator();
@@ -192,6 +206,10 @@ class DBImpl : public DB {
   const bool owns_cache_;
   const std::string dbname_;
   const std::string db_nvm_name_;
+  std::vector<std::string> db_paths_;
+
+  // class NVMKeyValueMap;
+  NVMKeyValueMap* nvm_kv_map_;
 
   // table_cache_ provides its own synchronization
   TableCache* const table_cache_;
@@ -207,6 +225,7 @@ class DBImpl : public DB {
   MemTable* mem_;
   MemTable* imm_ GUARDED_BY(mutex_);  // Memtable being compacted
   std::atomic<bool> has_imm_;         // So bg thread can detect non-null imm_
+  std::atomic<bool> imm_being_processed;
   WritableFile* logfile_;
   uint64_t logfile_number_ GUARDED_BY(mutex_);
   log::Writer* log_;

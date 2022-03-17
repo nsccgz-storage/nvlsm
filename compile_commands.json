@@ -1,0 +1,552 @@
+[
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/version_set_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/version_set_test.dir/db/version_set_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/version_set_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/version_set_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/filter_block_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/filter_block_test.dir/table/filter_block_test.cc.o -c /home/bily/bily_mnt/nvlsm/table/filter_block_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/filter_block_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/version_edit_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/version_edit_test.dir/db/version_edit_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/version_edit_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/version_edit_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/write_batch_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/write_batch_test.dir/db/write_batch_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/write_batch_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/write_batch_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/db_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/db_test.dir/db/db_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/db_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/db_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/filename_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/filename_test.dir/db/filename_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/filename_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/filename_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/skiplist_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/skiplist_test.dir/db/skiplist_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/skiplist_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/skiplist_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/hash_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/hash_test.dir/util/hash_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/hash_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/hash_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/env_posix_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/env_posix_test.dir/util/env_posix_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/env_posix_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/env_posix_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/no_destructor_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/no_destructor_test.dir/util/no_destructor_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/no_destructor_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/no_destructor_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++   -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldbutil.dir/db/leveldbutil.cc.o -c /home/bily/bily_mnt/nvlsm/db/leveldbutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/leveldbutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/cache_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/cache_test.dir/util/cache_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/cache_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/cache_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/status_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/status_test.dir/util/status_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/status_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/status_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/table_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/table_test.dir/table/table_test.cc.o -c /home/bily/bily_mnt/nvlsm/table/table_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/table_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/arena_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/arena_test.dir/util/arena_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/arena_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/arena_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/bloom_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/bloom_test.dir/util/bloom_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/bloom_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/bloom_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/coding_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/coding_test.dir/util/coding_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/coding_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/coding_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/crc32c_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/crc32c_test.dir/util/crc32c_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/crc32c_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/crc32c_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/log_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/log_test.dir/db/log_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/log_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/log_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++   -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/comp_test.dir/table_nvm/comp_test.cc.o -c /home/bily/bily_mnt/nvlsm/table_nvm/comp_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table_nvm/comp_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/builder.cc.o -c /home/bily/bily_mnt/nvlsm/db/builder.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/builder.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/c.cc.o -c /home/bily/bily_mnt/nvlsm/db/c.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/c.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/db_impl.cc.o -c /home/bily/bily_mnt/nvlsm/db/db_impl.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/db_impl.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/db_iter.cc.o -c /home/bily/bily_mnt/nvlsm/db/db_iter.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/db_iter.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/dbformat.cc.o -c /home/bily/bily_mnt/nvlsm/db/dbformat.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/dbformat.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/dumpfile.cc.o -c /home/bily/bily_mnt/nvlsm/db/dumpfile.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/dumpfile.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/filename.cc.o -c /home/bily/bily_mnt/nvlsm/db/filename.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/filename.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/log_reader.cc.o -c /home/bily/bily_mnt/nvlsm/db/log_reader.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/log_reader.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/log_writer.cc.o -c /home/bily/bily_mnt/nvlsm/db/log_writer.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/log_writer.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/memtable.cc.o -c /home/bily/bily_mnt/nvlsm/db/memtable.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/memtable.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/repair.cc.o -c /home/bily/bily_mnt/nvlsm/db/repair.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/repair.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/table_cache.cc.o -c /home/bily/bily_mnt/nvlsm/db/table_cache.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/table_cache.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/version_edit.cc.o -c /home/bily/bily_mnt/nvlsm/db/version_edit.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/version_edit.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/version_set.cc.o -c /home/bily/bily_mnt/nvlsm/db/version_set.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/version_set.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/db/write_batch.cc.o -c /home/bily/bily_mnt/nvlsm/db/write_batch.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/write_batch.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/block_builder.cc.o -c /home/bily/bily_mnt/nvlsm/table/block_builder.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/block_builder.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/block.cc.o -c /home/bily/bily_mnt/nvlsm/table/block.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/block.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/filter_block.cc.o -c /home/bily/bily_mnt/nvlsm/table/filter_block.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/filter_block.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/format.cc.o -c /home/bily/bily_mnt/nvlsm/table/format.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/format.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/iterator.cc.o -c /home/bily/bily_mnt/nvlsm/table/iterator.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/iterator.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/merger.cc.o -c /home/bily/bily_mnt/nvlsm/table/merger.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/merger.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/table_builder.cc.o -c /home/bily/bily_mnt/nvlsm/table/table_builder.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/table_builder.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/table.cc.o -c /home/bily/bily_mnt/nvlsm/table/table.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/table.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table/two_level_iterator.cc.o -c /home/bily/bily_mnt/nvlsm/table/two_level_iterator.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table/two_level_iterator.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table_nvm/table_builder_nvm.cc.o -c /home/bily/bily_mnt/nvlsm/table_nvm/table_builder_nvm.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table_nvm/table_builder_nvm.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table_nvm/table_cache_nvm.cc.o -c /home/bily/bily_mnt/nvlsm/table_nvm/table_cache_nvm.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table_nvm/table_cache_nvm.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/table_nvm/table_nvm.cc.o -c /home/bily/bily_mnt/nvlsm/table_nvm/table_nvm.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/table_nvm/table_nvm.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/arena.cc.o -c /home/bily/bily_mnt/nvlsm/util/arena.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/arena.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/bloom.cc.o -c /home/bily/bily_mnt/nvlsm/util/bloom.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/bloom.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/cache.cc.o -c /home/bily/bily_mnt/nvlsm/util/cache.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/cache.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/coding.cc.o -c /home/bily/bily_mnt/nvlsm/util/coding.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/coding.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/comparator.cc.o -c /home/bily/bily_mnt/nvlsm/util/comparator.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/comparator.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/crc32c.cc.o -c /home/bily/bily_mnt/nvlsm/util/crc32c.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/crc32c.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/env.cc.o -c /home/bily/bily_mnt/nvlsm/util/env.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/env.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/filter_policy.cc.o -c /home/bily/bily_mnt/nvlsm/util/filter_policy.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/filter_policy.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/hash.cc.o -c /home/bily/bily_mnt/nvlsm/util/hash.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/hash.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/logging.cc.o -c /home/bily/bily_mnt/nvlsm/util/logging.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/logging.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/options.cc.o -c /home/bily/bily_mnt/nvlsm/util/options.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/options.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/status.cc.o -c /home/bily/bily_mnt/nvlsm/util/status.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/status.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/util/env_posix.cc.o -c /home/bily/bily_mnt/nvlsm/util/env_posix.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/env_posix.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_COMPILE_LIBRARY -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/leveldb.dir/helpers/memenv/memenv.cc.o -c /home/bily/bily_mnt/nvlsm/helpers/memenv/memenv.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/helpers/memenv/memenv.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/logging_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/logging_test.dir/util/logging_test.cc.o -c /home/bily/bily_mnt/nvlsm/util/logging_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/logging_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/db_bench.dir/util/histogram.cc.o -c /home/bily/bily_mnt/nvlsm/util/histogram.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/histogram.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/db_bench.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/db_bench.dir/benchmarks/db_bench.cc.o -c /home/bily/bily_mnt/nvlsm/benchmarks/db_bench.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/benchmarks/db_bench.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/dbformat_test.dir/util/testutil.cc.o -c /home/bily/bily_mnt/nvlsm/util/testutil.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/util/testutil.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build",
+  "command": "/usr/bin/c++  -DLEVELDB_PLATFORM_POSIX=1 -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -std=c++11 -o CMakeFiles/dbformat_test.dir/db/dbformat_test.cc.o -c /home/bily/bily_mnt/nvlsm/db/dbformat_test.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/db/dbformat_test.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/googletest/googlemock",
+  "command": "/usr/bin/c++   -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++11 -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/src/gmock_main.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/src/gmock_main.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/googletest/googlemock",
+  "command": "/usr/bin/c++   -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/include -I/home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-missing-field-initializers -std=c++11 -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/src/gmock-all.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/googletest/googlemock/src/gmock-all.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/googletest/googletest",
+  "command": "/usr/bin/c++   -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -isystem /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++11 -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/src/gtest_main.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/src/gtest_main.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/googletest/googletest",
+  "command": "/usr/bin/c++   -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/include -I/home/bily/bily_mnt/nvlsm/third_party/googletest/googletest   -fno-exceptions -fno-rtti   -Wall -Wshadow -Werror -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-missing-field-initializers -std=c++11 -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/src/gtest-all.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/googletest/googletest/src/gtest-all.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark_main.dir/benchmark_main.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_main.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_main.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/benchmark.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/benchmark_api_internal.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_api_internal.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_api_internal.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/benchmark_name.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_name.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_name.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/benchmark_register.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_register.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_register.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/benchmark_runner.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_runner.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/benchmark_runner.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/colorprint.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/colorprint.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/colorprint.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/commandlineflags.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/commandlineflags.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/commandlineflags.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/complexity.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/complexity.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/complexity.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/console_reporter.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/console_reporter.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/console_reporter.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/counter.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/counter.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/counter.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/csv_reporter.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/csv_reporter.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/csv_reporter.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/json_reporter.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/json_reporter.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/json_reporter.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/perf_counters.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/perf_counters.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/perf_counters.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/reporter.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/reporter.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/reporter.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/sleep.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/sleep.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/sleep.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/statistics.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/statistics.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/statistics.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/string_util.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/string_util.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/string_util.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/sysinfo.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/sysinfo.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/sysinfo.cc"
+},
+{
+  "directory": "/home/bily/bily_mnt/nvlsm/clangd_build/third_party/benchmark/src",
+  "command": "/usr/bin/c++  -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -I/home/bily/bily_mnt/nvlsm/clangd_build/include -I/home/bily/bily_mnt/nvlsm/. -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/include -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src -I/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/../include   -fno-exceptions -fno-rtti  -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -fstrict-aliasing  -Wno-deprecated-declarations  -fno-exceptions  -Wstrict-aliasing   -std=c++11 -o CMakeFiles/benchmark.dir/timers.cc.o -c /home/bily/bily_mnt/nvlsm/third_party/benchmark/src/timers.cc",
+  "file": "/home/bily/bily_mnt/nvlsm/third_party/benchmark/src/timers.cc"
+}
+]

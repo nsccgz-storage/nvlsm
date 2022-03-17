@@ -14,6 +14,7 @@
 #include "leveldb/filter_policy.h"
 #include "leveldb/slice.h"
 #include "leveldb/table_builder.h"
+
 #include "util/coding.h"
 #include "util/logging.h"
 
@@ -25,19 +26,21 @@ namespace config {
 static const int kNumLevels = 7;
 
 // Level-0 compaction is started when we hit this many files.
-static const int kL0_CompactionTrigger = 4;//4;
+static const int kL0_CompactionTrigger = 4;  // 4;
 
 // Soft limit on number of level-0 files.  We slow down writes at this point.
-static const int kL0_SlowdownWritesTrigger = 8;//8;
+static const int kL0_SlowdownWritesTrigger = 8;  // 8;
 
 // static const int kL1TableSizeLimit = 10;
 
 // Maximum number of level-0 files.  We stop writes at this point.
-static const int kL0_StopWritesTrigger = 14;//12;
+static const int kL0_StopWritesTrigger = 14;  // 12;
 
-static const int kL1_StopSplitTrigger = 12;
+static const int kL1_StopSplitTrigger = 8;
 
 static const double kL1_MaxSegBytes = 20. * 1048576.0;
+
+static const int kL1_MaxSegNum = 10;
 // Maximum level to which a new compacted memtable is pushed if it
 // does not create overlap.  We try to push to level 2 to avoid the
 // relatively expensive level 0=>1 compactions and to avoid some

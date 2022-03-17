@@ -164,6 +164,7 @@ target_sources(leveldb
     "db/version_set.h"
     "db/write_batch_internal.h"
     "db/write_batch.cc"
+    
     "port/port_stdcxx.h"
     "port/port.h"
     "port/thread_annotations.h"
@@ -189,6 +190,7 @@ target_sources(leveldb
     "table_nvm/table_cache_nvm.h"
     "table_nvm/table_nvm.cc"
     "table_nvm/table_nvm.h"
+    "table_nvm/nvmkvmap.h"
     "util/arena.cc"
     "util/arena.h"
     "util/bloom.cc"
@@ -211,7 +213,8 @@ target_sources(leveldb
     "util/status.cc"
     "util/autovector.h"
     "util/heap.h"
-
+     
+    # "table_nvm/nvmkvmap.cc"
   # Only CMake 3.3+ supports PUBLIC sources in targets exported by "install".
   $<$<VERSION_GREATER:CMAKE_VERSION,3.2>:PUBLIC>
     "${LEVELDB_PUBLIC_INCLUDE_DIR}/c.h"
@@ -316,6 +319,12 @@ add_executable(comp_test
   "table_nvm/comp_test.cc")
 target_link_libraries(comp_test leveldb)
 
+# add_executable(nvmmap_test
+# "db/nvmkvmap_test.cc"
+#   )
+# target_link_libraries(nvmmap_test gmock gtest leveldb)
+# leveldb_test()
+
 if(LEVELDB_BUILD_TESTS)
   enable_testing()
 
@@ -391,7 +400,8 @@ if(LEVELDB_BUILD_TESTS)
     leveldb_test("db/version_edit_test.cc")
     leveldb_test("db/version_set_test.cc")
     leveldb_test("db/write_batch_test.cc")
-
+    leveldb_test("table_nvm/nvmkvmap_test.cc")
+    
     #leveldb_test("helpers/memenv/memenv_test.cc")
 
     leveldb_test("table/filter_block_test.cc")

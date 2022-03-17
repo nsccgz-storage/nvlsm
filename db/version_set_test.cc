@@ -4,9 +4,10 @@
 
 #include "db/version_set.h"
 
-#include "gtest/gtest.h"
 #include "util/logging.h"
 #include "util/testutil.h"
+
+#include "gtest/gtest.h"
 
 namespace leveldb {
 
@@ -329,12 +330,12 @@ TEST_F(AddBoundaryInputsTest, TestDisjoinFilePointers) {
 }
 
 // test findTableInterval()
-  // target ["100", "150"]
-  // intervals ["50", "100"], ["100", "180"], ["200", "250"]
-  // return index 0 ?
+// target ["100", "150"]
+// intervals ["50", "100"], ["100", "180"], ["200", "250"]
+// return index 0 ?
 
 // test index part iterator
-  // just like 
+// just like
 
 // test makeNewFiles()
 

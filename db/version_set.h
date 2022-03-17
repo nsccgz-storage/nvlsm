@@ -15,14 +15,14 @@
 #ifndef STORAGE_LEVELDB_DB_VERSION_SET_H_
 #define STORAGE_LEVELDB_DB_VERSION_SET_H_
 
-#include <memory>
+#include "db/dbformat.h"
+#include "db/version_edit.h"
 #include <map>
+#include <memory>
 #include <set>
 #include <unordered_set>
 #include <vector>
 
-#include "db/dbformat.h"
-#include "db/version_edit.h"
 #include "port/port.h"
 #include "port/thread_annotations.h"
 
@@ -41,7 +41,7 @@ class Version;
 class VersionSet;
 class WritableFile;
 class TableCacheNVM;
-
+struct SuperCompaction;
 // Return the smallest index i such that files[i]->largest >= key.
 // Return files.size() if there is no such file.
 // REQUIRES: "files" contains a sorted list of non-overlapping files.
@@ -176,92 +176,88 @@ class Version {
   int compaction_level_;
 };
 
-struct LevelOutput{
+struct LevelOutput {
   // bool is_new;
-  LevelOutput(uint64_t num, uint64_t f_size, InternalKey& small, InternalKey& large, std::vector<SegmentMeta*>& new_segs) 
-    : number(num),
-      file_size(f_size),
-      new_segments(std::move(new_segs)) {
+  LevelOutput(uint64_t num, uint64_t f_size, InternalKey& small,
+              InternalKey& large, std::vector<SegmentMeta*>& new_segs)
+      : number(num), file_size(f_size), new_segments(std::move(new_segs)) {
     smallest.DecodeFrom(small.Encode());
     largest.DecodeFrom(large.Encode());
   }
   // uint64_t orig_number;
   uint64_t number;
-  uint64_t file_size; // virtual sstable size
+  uint64_t file_size;  // virtual sstable size
   InternalKey smallest;
   InternalKey largest;
   std::vector<SegmentMeta*> new_segments;
 };
 
-
 // (], (], ... , (]
 struct TableInterval {
   TableInterval(const Slice* left, const Slice* right,
-       const Slice*real_left=nullptr,
-       const Slice *real_right=nullptr) 
+                const Slice* real_left = nullptr,
+                const Slice* real_right = nullptr)
       : total_size(0) {
     left_bound = right_bound = nullptr;
     real_left_bound = nullptr;
     real_right_bound = nullptr;
-    if(left && !left->empty()) {
+    if (left && !left->empty()) {
       left_bound = new InternalKey();
       left_bound->DecodeFrom(*left);
     }
 
-    if(right && !right->empty()) {
+    if (right && !right->empty()) {
       right_bound = new InternalKey();
       right_bound->DecodeFrom(*right);
     }
-    if(real_left != nullptr) {
+    if (real_left != nullptr) {
       real_left_bound = new InternalKey();
       real_left_bound->DecodeFrom(*real_left);
     }
-    if(real_right != nullptr) {
+    if (real_right != nullptr) {
       real_right_bound = new InternalKey();
       real_right_bound->DecodeFrom(*real_right);
     }
   }
   ~TableInterval() {
-    if(left_bound != nullptr) {
+    if (left_bound != nullptr) {
       delete left_bound;
-
     }
-    if(right_bound != nullptr) {
+    if (right_bound != nullptr) {
       delete right_bound;
     }
-    if(real_left_bound != nullptr) {
+    if (real_left_bound != nullptr) {
       delete real_left_bound;
     }
-    if(real_right_bound != nullptr) {
+    if (real_right_bound != nullptr) {
       delete real_right_bound;
     }
   }
 
   // bool new_interval;
   // uint64_t orig_number;   // only valid when new_interval is false;
-  InternalKey *left_bound; // not included
-  InternalKey *right_bound; // included in the range
+  InternalKey* left_bound;   // not included
+  InternalKey* right_bound;  // included in the range
 
-  InternalKey *real_left_bound;
+  InternalKey* real_left_bound;
   // std::shared_ptr<InternalKey> real_left_bound;
-  InternalKey *real_right_bound;
+  InternalKey* real_right_bound;
   // std::shared_ptr<InternalKey> real_right_bound;
 
   std::vector<SegmentMeta*> segments;
   uint64_t total_size;
-
-
 };
 
 struct TableCacheNVMAndInputs {
   TableCacheNVM* table_cache;
-  const std::vector<FileMetaData*> *inputs;
+  const std::vector<FileMetaData*>* inputs;
 };
 
 class VersionSet {
  public:
   VersionSet(const std::string& dbname, const Options* options,
-             TableCache* table_cache, TableCacheNVM* table_cache_nvm, const InternalKeyComparator*);
+             TableCache* table_cache, TableCacheNVM* table_cache_nvm,
+             const InternalKeyComparator*);
   VersionSet(const VersionSet&) = delete;
   VersionSet& operator=(const VersionSet&) = delete;
 
@@ -287,7 +283,7 @@ class VersionSet {
   // Allocate and return a new file number
   uint64_t NewFileNumber() {
     // printf("next file numner : %lu\n", next_file_number_);
-    return next_file_number_++; 
+    return next_file_number_++;
   }
 
   // uint64_t NewSSTableNumber() { return next_sstable_number_++; }
@@ -333,6 +329,9 @@ class VersionSet {
   // describes the compaction.  Caller should delete the result.
   Compaction* PickCompaction();
 
+  bool L1NeedCompaction();
+  SuperCompaction* PickSubCompaction(int level);
+
   // Return a compaction object for compacting the range [begin,end] in
   // the specified level.  Returns nullptr if there is nothing in that
   // level that overlaps the specified range.  Caller should delete
@@ -369,11 +368,12 @@ class VersionSet {
   };
   const char* LevelSummary(LevelSummaryStorage* scratch) const;
 
-  const char *LevelSegSummary(std::string& s) const ;
+  const char* LevelSegSummary(std::string& s) const;
 
-  Status MakeNewFiles(Compaction* compact, std::vector<LevelOutput> &outputs, port::Mutex* mu) ;
+  Status MakeNewFiles(Compaction* compact, std::vector<LevelOutput>& outputs,
+                      port::Mutex* mu);
   // void EvictSegment(uint64_t seg_num) ;
-  
+
  private:
   class Builder;
 
@@ -392,21 +392,28 @@ class VersionSet {
                  InternalKey* smallest, InternalKey* largest);
 
   void SetupOtherInputs(Compaction* c);
-
+  void SubSetupOtherInputs(Compaction* c);
   // Save current contents to *log
   Status WriteSnapshot(log::Writer* log);
 
   void AppendVersion(Version* v);
 
-  Status SplitFileForInputs(const SegmentMeta* seg,Iterator* seg_iter,
+  Status SplitFileForInputs(const SegmentMeta* seg, Iterator* seg_iter,
                             std::vector<TableInterval*>& table_intervals,
                             port::Mutex* mu);
 
-  void SetupTableIntervals(std::vector<TableInterval*>& intervals,  const std::vector<FileMetaData*> &input, port::Mutex* mu, bool is_split);
+  void SetupTableIntervals(std::vector<TableInterval*>& intervals,
+                           const std::vector<FileMetaData*>& input,
+                           port::Mutex* mu, bool is_split,
+                           int remain_interval_num);
 
+  void SetupTableIntervalsUniform(std::vector<TableInterval*>& intervals,
+                                  const std::vector<FileMetaData*>& input,
+                                  port::Mutex* mu);
   // Iterator* NewSegKeyIterator(SegmentMeta* seg);
 
-  Status DecodeMetaVals(Slice& val, uint64_t *key_offset, uint64_t *key_data_offset); 
+  Status DecodeMetaVals(Slice& val, uint64_t* key_offset,
+                        uint64_t* key_data_offset);
 
   Env* const env_;
   const std::string dbname_;
@@ -435,6 +442,17 @@ class VersionSet {
   std::string compact_pointer_[config::kNumLevels];
 };
 
+class SubCompaction {
+ public:
+  explicit SubCompaction(int level) : level(level) {}
+
+ private:
+  std::vector<FileMetaData*> inputs[2];
+  std::vector<FileMetaData*> grandparent;
+  int level;
+  VersionEdit* edit;
+};
+
 // A Compaction encapsulates information about a compaction.
 class Compaction {
  public:
@@ -454,8 +472,8 @@ class Compaction {
   // Return the ith input file at "level()+which" ("which" must be 0 or 1).
   FileMetaData* input(int which, int i) const { return inputs_[which][i]; }
 
-  // FileMetaData* inputSSTable(int which, int i) const {return inputs_[which][i];}
-
+  // FileMetaData* inputSSTable(int which, int i) const {return
+  // inputs_[which][i];}
 
   // Maximum size of files to build during this compaction.
   uint64_t MaxOutputFileSize() const { return max_output_file_size_; }
@@ -484,6 +502,10 @@ class Compaction {
 
   bool IsLevelCompaction() const;
 
+  uint64_t NumSubCompaction() const;
+
+  std::vector<SubCompaction*> GetAllSubCompaction();
+
  private:
   friend class Version;
   friend class VersionSet;
@@ -497,10 +519,11 @@ class Compaction {
 
   // Each compaction reads inputs from "level_" and "level_+1"
   // for level compaction we could put all files in "level_ + 1"
-  // to inputs_[1], but it may be possible that 
+  // to inputs_[1], but it may be possible that
   // std::vector<FileMetaData*> inputs_[2];  // The two sets of inputs
   std::vector<FileMetaData*> inputs_[2];
 
+  std::vector<SubCompaction*> sub_compactions_;
   // State used to check for number of overlapping grandparent files
   // (parent == level_ + 1, grandparent == level_ + 2)
   // std::vector<FileMetaData*> grandparents_;
@@ -520,8 +543,23 @@ class Compaction {
   size_t level_ptrs_[config::kNumLevels];
 
   bool is_split_;
+  bool is_subcompaction;
 };
+struct SuperCompaction {
+  ~SuperCompaction() {
+    for (int i = 0; i < sub_compactions.size(); i++) {
+      delete sub_compactions[i];
+    }
+  }
 
+  void ReleaseInputs() {
+    if (input_version != nullptr) {
+      input_version->Unref();
+    }
+  }
+  std::vector<Compaction*> sub_compactions;
+  Version* input_version;
+};
 }  // namespace leveldb
 
 #endif  // STORAGE_LEVELDB_DB_VERSION_SET_H_
