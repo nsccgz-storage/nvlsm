@@ -15,7 +15,7 @@
 # Getting the Source
 
 ```bash
-git clone --recurse-submodules https://github.com/google/leveldb.git
+git clone --recurse-submodules git@github.com:nsccgz-storage/nvlsm.git
 ```
 
 # Building
